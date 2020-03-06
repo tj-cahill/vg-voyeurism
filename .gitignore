@@ -1,0 +1,10 @@
+# Avoid committing any actual data files
+# [These are considered confidential as per IRB protocol]
+
+*.csv
+*.tsv
+*.rdata
+*.dta
+*.sav
+*.xls
+*.xlsx
