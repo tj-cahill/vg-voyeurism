@@ -1,14 +1,15 @@
 # Avoid committing any actual data files
 # [These are considered confidential as per IRB protocol]
 
-.csv
-.tsv
-.rdata
-.dta
-.sav
-.xls
-.xlsx
+*.csv
+*.tsv
+*.rdata
+*.dta
+*.sav
+*.xls
+*.xlsx
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
+
