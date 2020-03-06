@@ -46,10 +46,10 @@ w2_gsr <- read_delim(
 )
 
 # Merge waves of data
-w1_gsr$Wave <- 1
-w2_gsr$Wave <- 2
+w1_gsr$wave <- as.integer(1)
+w2_gsr$wave <- as.integer(2)
 
-gsr <- w1_gsr %>% bind_rows(w2_gsr)
+gsr <- bind_rows(w1_gsr, w2_gsr)
 
 # Clean column names
 colnames(gsr) <-
