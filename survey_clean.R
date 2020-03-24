@@ -1,5 +1,6 @@
 library(readr)
 library(dplyr)
+library(batman)
 
 # Import data from pre-test survey
 w1_pre <- read_csv("data/W1_PreTestResponse.csv", col_names = FALSE, skip = 3,
@@ -69,6 +70,12 @@ colnames(pre) <-
     "VGChannelsSubscribed",
     "ownChannelSubscribers",
     "wave")
+
+# Convert variables to logical
+pre <- pre %>% mutate(useTwitch = to_logical(as.character(useTwitch)),
+                      postTwitch = to_logical(as.character(postTwitch)),
+                      useYT = to_logical(as.character(useYT)),
+                      postYT = to_logical(as.character(postYT)))
 
 # Remove incomplete responses
 pre <- pre %>% filter(complete) %>% select(-complete)
