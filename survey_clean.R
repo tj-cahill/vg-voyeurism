@@ -203,3 +203,12 @@ colnames(post) <-
           
 # Remove incomplete responses
 post <- post %>% filter(complete) %>% select(-complete)
+
+# Clean up data types (convert Likert-type scales into numerics)
+post <- post %>%  mutate_at(vars(matches("IMI|PSI|playerSkill|playerExp|playerBetterThan")), as.numeric)
+
+# Clean up levels for some of the other factor variables
+post$firstLangEng <- recode_factor(post$firstLangEng, `Yes`= "English", `No` = "Other", `I am equally fluent in English and another language` = "Equal")
+post <- post %>% rename(firstLang = firstLangEng)
+
+post$orientation <- recode_factor(post$orientation, `Interested in women` = "Women", `Interested in men` = "Men", `Interested in both/all` = "Both", `Interested in neither/none` = "None", `Other` = "Other")
