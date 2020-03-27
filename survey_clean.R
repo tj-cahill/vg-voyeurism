@@ -212,3 +212,21 @@ post$firstLangEng <- recode_factor(post$firstLangEng, `Yes`= "English", `No` = "
 post <- post %>% rename(firstLang = firstLangEng)
 
 post$orientation <- recode_factor(post$orientation, `Interested in women` = "Women", `Interested in men` = "Men", `Interested in both/all` = "Both", `Interested in neither/none` = "None", `Other` = "Other")
+
+# Score IMI an PSI sub-scales
+# Account for reverse-coded measures
+reverse_code <- function(x, range = 7) {
+  rev_x <- (range + 1) - x
+  return(rev_x)
+}
+
+post <- post %>% 
+  mutate_at(c("IMI_Enjoyment.3", "IMI_Enjoyment.4", "PSI_Cognitive.2", "PSI_Affective.3", "PSI_Behavioral.1"), reverse_code) %>%
+  rename(IMI_Enjoyment.3.R = IMI_Enjoyment.3, IMI_Enjoyment.4.R = IMI_Enjoyment.4, PSI_Cognitive.2.R = PSI_Cognitive.2, PSI_Affective.3.R = PSI_Affective.3, PSI_Behavioral.1.R = PSI_Behavioral.1) 
+  
+# Score IMI and PSI sub-scales
+post <- post %>%
+  mutate(IMI_Enjoyment = (IMI_Enjoyment.1 + IMI_Enjoyment.2 + IMI_Enjoyment.3.R + IMI_Enjoyment.4.R + IMI_Enjoyment.5 + IMI_Enjoyment.6 + IMI_Enjoyment.7)/7,
+         PSI_Cognitive = (PSI_Cognitive.1 + PSI_Cognitive.2.R + PSI_Cognitive.3 + PSI_Cognitive.4 + PSI_Cognitive.5 + PSI_Cognitive.6)/6,
+         PSI_Affective = (PSI_Affective.1 + PSI_Affective.2 + PSI_Affective.3.R)/3,
+         PSI_Behavioral = (PSI_Behavioral.1.R + PSI_Behavioral.2 + PSI_Behavioral.3)/3)
