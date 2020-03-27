@@ -230,3 +230,16 @@ post <- post %>%
          PSI_Cognitive = (PSI_Cognitive.1 + PSI_Cognitive.2.R + PSI_Cognitive.3 + PSI_Cognitive.4 + PSI_Cognitive.5 + PSI_Cognitive.6)/6,
          PSI_Affective = (PSI_Affective.1 + PSI_Affective.2 + PSI_Affective.3.R)/3,
          PSI_Behavioral = (PSI_Behavioral.1.R + PSI_Behavioral.2 + PSI_Behavioral.3)/3)
+
+# export ------------------------------------------------------------------
+
+# Merge pre- and post-test responses
+pre$id <- gsub("[^0-9.-]", "", pre$id)
+pre$id <- gsub("(^|[^0-9])0+", "\\1", pre$id, perl = TRUE)
+post$id <- gsub("[^0-9.-]", "", post$id)
+post$id <- gsub("(^|[^0-9])0+", "\\1", post$id, perl = TRUE)
+
+# Note that there are some duplicate IDs (look into this later)
+qualtrics_full <- right_join(pre, post, by = c("id", "wave"))
+
+write_csv(qualtrics_full, "data/Qualtrics_merged.csv")
