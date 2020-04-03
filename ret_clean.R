@@ -75,7 +75,7 @@ colnames(ret) <-
     "stimGame",
     "stimGender",
     "stimFace",
-    "respondent",
+    "id",
     "gender",
     "age",
     "aoi",

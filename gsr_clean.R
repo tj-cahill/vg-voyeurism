@@ -62,7 +62,7 @@ gsr <- bind_rows(w1_gsr, w2_gsr)
 # Clean column names
 colnames(gsr) <-
   c("scene",
-    "respondent",
+    "id",
     "gender",
     "age",
     "hasPeak",
