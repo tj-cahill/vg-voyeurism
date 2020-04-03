@@ -51,3 +51,6 @@ imotions <- imotions %>% select(-age)
 all <- left_join(imotions, qualtrics, by = c("id", "wave",
                                         "gender"))
 
+# dedupe ------------------------------------------------------------------
+
+all <- all %>% distinct()
