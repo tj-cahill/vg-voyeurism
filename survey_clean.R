@@ -1,3 +1,12 @@
+################################################################################
+# SURVEY_CLEAN.R                                                               #
+# ============================================================================ #
+# This script takes output from Qualtrics' CSV output function (having         #
+# pre-selected relevant variables and stripper out meta-data at the output     #
+# stage) and cleans it up so that it's usable and readable for subsequent      #
+# analysis, outputting as another (better) CSV file.                           #                                                        #
+################################################################################
+
 library(readr)
 library(dplyr)
 library(batman)

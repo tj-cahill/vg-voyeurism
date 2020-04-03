@@ -1,3 +1,11 @@
+################################################################################
+# RET_CLEAN.R                                                                  #
+# ============================================================================ #
+# This script takes output from pre-processed remote eye-tracking (RET) data   #
+# in iMotions and cleans it up so that it's usable and readable for subsequent #
+# analysis, outputting as a CSV file.                                          #                                                          #
+################################################################################
+
 library(readr)
 library(dplyr)
 
