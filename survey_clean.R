@@ -222,6 +222,9 @@ post <- post %>% rename(firstLang = firstLangEng)
 
 post$orientation <- recode_factor(post$orientation, `Interested in women` = "Women", `Interested in men` = "Men", `Interested in both/all` = "Both", `Interested in neither/none` = "None", `Other` = "Other")
 
+# Make sure that the gender output is all-caps (to match iMotions convention)
+post$gender <- recode_factor(post$gender, `Female` = "FEMALE", `Male` = "MALE", `Other` = "OTHER")
+
 # Score IMI an PSI sub-scales
 # Account for reverse-coded measures
 reverse_code <- function(x, range = 7) {
