@@ -251,7 +251,13 @@ pre$id <- gsub("(^|[^0-9])0+", "\\1", pre$id, perl = TRUE)
 post$id <- gsub("[^0-9.-]", "", post$id)
 post$id <- gsub("(^|[^0-9])0+", "\\1", post$id, perl = TRUE)
 
-# Note that there are some duplicate IDs (look into this later)
+# Note that there are some duplicate IDs
 qualtrics_full <- right_join(pre, post, by = c("id", "wave"))
+
+# Participants 3304 and 3529 were identified as having likely participated in 
+# both waves, in violation of study protocols >> manually remove records from
+# the second wave for each
+
+qualtrics_full <- qualtrics_full %>% filter(!((id == 3304 | id == 3529) & wave == 2))
 
 write_csv(qualtrics_full, "data/Qualtrics_merged.csv")
