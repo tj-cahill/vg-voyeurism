@@ -118,11 +118,20 @@ ret <-
     )
   )
 
+
+# dedupe ------------------------------------------------------------------
+
+# Clean up participant ID codes
+ret$id <- gsub("[^0-9.-]", "", ret$id)
+ret$id <- gsub("(^|[^0-9])0+", "\\1", ret$id, perl = TRUE)
+
 # Participants 3304 and 3529 were identified as having likely participated in 
 # both waves, in violation of study protocols >> manually remove records from
 # the second wave for each
 
-ret <- ret %>% filter(!((id == "S3304" | id == "S3529") & wave == 2))
+ret <- ret %>% filter(!((id == 3304 | id == 3529) & wave == 2))
+
+# export ------------------------------------------------------------------
 
 # Export clean and merged CSV file
 write_csv(ret, "data/RET_merged.csv")

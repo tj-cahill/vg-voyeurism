@@ -243,21 +243,16 @@ post <- post %>%
          PSI_Affective = (PSI_Affective.1 + PSI_Affective.2 + PSI_Affective.3.R)/3,
          PSI_Behavioral = (PSI_Behavioral.1.R + PSI_Behavioral.2 + PSI_Behavioral.3)/3)
 
-# export ------------------------------------------------------------------
-
-# Merge pre- and post-test responses
-pre$id <- gsub("[^0-9.-]", "", pre$id)
-pre$id <- gsub("(^|[^0-9])0+", "\\1", pre$id, perl = TRUE)
-post$id <- gsub("[^0-9.-]", "", post$id)
-post$id <- gsub("(^|[^0-9])0+", "\\1", post$id, perl = TRUE)
-
-# Note that there are some duplicate IDs
-qualtrics_full <- right_join(pre, post, by = c("id", "wave"))
+# dedupe ------------------------------------------------------------------
 
 # Participants 3304 and 3529 were identified as having likely participated in 
 # both waves, in violation of study protocols >> manually remove records from
 # the second wave for each
+pre <- pre %>% filter(!((id == 3304 | id == 3529) & wave == 2))
+post <- post %>% filter(!((id == 3304 | id == 3529) & wave == 2))
 
-qualtrics_full <- qualtrics_full %>% filter(!((id == 3304 | id == 3529) & wave == 2))
+# merge -------------------------------------------------------------------
+qualtrics_full <- right_join(pre, post, by = c("id", "wave"))
 
+# export ------------------------------------------------------------------
 write_csv(qualtrics_full, "data/Qualtrics_merged.csv")
