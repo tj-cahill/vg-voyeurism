@@ -118,5 +118,11 @@ ret <-
     )
   )
 
+# Participants 3304 and 3529 were identified as having likely participated in 
+# both waves, in violation of study protocols >> manually remove records from
+# the second wave for each
+
+ret <- ret %>% filter(!((id == "S3304" | id == "S3529") & wave == 2))
+
 # Export clean and merged CSV file
 write_csv(ret, "data/RET_merged.csv")
