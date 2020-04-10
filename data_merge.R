@@ -55,6 +55,11 @@ all <- left_join(imotions, qualtrics, by = c("id", "wave",
 
 all <- all %>% distinct()
 
-# For the time being, remove Participant Code 5569 from the analysis, because 
-# of duplication/matching issues
-all <- all %>% filter(id != 5569)
+
+# export ------------------------------------------------------------------
+
+# Export merged dataset as a CSV file for records
+write_csv(all, "data/merged_all.csv")
+
+# Also export as RDS for easy transfer to analysis script
+saveRDS(all, file = "data/merged_all.rds")

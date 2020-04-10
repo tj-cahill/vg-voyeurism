@@ -1,0 +1,17 @@
+---
+title: "Watching Video Games - Diagnostics"
+author: "Tiernan J. Cahill"
+output: html_notebook
+---
+
+This script takes the cleaned output from the DATA_MERGE script and runs hypothesis tests and inductive stats for the second part of the analysis, following diagnostics and univariate states.
+
+```{r setup, include=FALSE}
+library(dplyr)
+```
+
+As before, we begin by importing the merged dataset.
+
+```{r import}
+readRDS(file = "data/merged_all.rds") -> vgv
+```

@@ -1,0 +1,41 @@
+---
+title: "Watching Video Games - Diagnostics"
+author: "Tiernan J. Cahill"
+output: html_notebook
+html_output: default
+---
+
+This script takes the cleaned output from the DATA_MERGE script and runs diagnostics and outputs univariate stats for the first part of the analysis, setting the groundwork for later hypothesis tests. 
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(knitr)
+library(psych)
+readRDS(file = "data/merged_all.rds") -> vgv
+```
+
+# Basics
+First, calculate the *n* for the study based on the number of unique participant IDs in the dataset.
+```{r n-calc}
+vgv$id %>% unique() %>% length() -> n
+```
+*n* = `r n`
+
+
+# Diagnostics
+
+## Reliability
+
+Several of the state DVs in the post-test questionnaire were multi-item batteries. While these scales have all been previously validated, we should check the reliability of our measurements nevertheless.
+```{r reliability, results='asis'}
+list('IMI Enjoyment'=c("IMI_Enjoyment.1", "IMI_Enjoyment.2", "IMI_Enjoyment.3.R", 
+                     "IMI_Enjoyment.4.R", "IMI_Enjoyment.5", "IMI_Enjoyment.6", "IMI_Enjoyment.7"),
+       'PSI Cognitive'=c("PSI_Cognitive.1", "PSI_Cognitive.2.R", "PSI_Cognitive.3",
+                     "PSI_Cognitive.4", "PSI_Cognitive.5", "PSI_Cognitive.6"),
+       'PSI Affective'=c("PSI_Affective.1", "PSI_Affective.2", "PSI_Affective.3.R"),
+       'PSI Behavioral'=c("PSI_Behavioral.1.R", "PSI_Behavioral.2", "PSI_Behavioral.3")) %>%
+  scoreItems(., vgv, impute="none") %>% 
+  .$alpha %>% 
+  kable(digits = 3)
+```
+
