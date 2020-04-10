@@ -54,3 +54,7 @@ all <- left_join(imotions, qualtrics, by = c("id", "wave",
 # dedupe ------------------------------------------------------------------
 
 all <- all %>% distinct()
+
+# For the time being, remove Participant Code 5569 from the analysis, because 
+# of duplication/matching issues
+all <- all %>% filter(id != 5569)
