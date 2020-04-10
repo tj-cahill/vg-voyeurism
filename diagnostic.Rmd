@@ -27,7 +27,7 @@ if (n.all == n.qualtrics) {
   print("ERROR: Number of participant IDs inconsistent across datasets.")
 }
 ```
-*n* = `r n`
+
 
 
 # Diagnostics
@@ -36,14 +36,29 @@ if (n.all == n.qualtrics) {
 
 Several of the state DVs in the post-test questionnaire were multi-item batteries. While these scales have all been previously validated, we should check the reliability of our measurements nevertheless.
 ```{r reliability, results='asis'}
-list('IMI Enjoyment'=c("IMI_Enjoyment.1", "IMI_Enjoyment.2", "IMI_Enjoyment.3.R", 
+list('IMI_Enjoyment'=c("IMI_Enjoyment.1", "IMI_Enjoyment.2", "IMI_Enjoyment.3.R", 
                      "IMI_Enjoyment.4.R", "IMI_Enjoyment.5", "IMI_Enjoyment.6", "IMI_Enjoyment.7"),
-       'PSI Cognitive'=c("PSI_Cognitive.1", "PSI_Cognitive.2.R", "PSI_Cognitive.3",
+       'PSI_Cognitive'=c("PSI_Cognitive.1", "PSI_Cognitive.2.R", "PSI_Cognitive.3",
                      "PSI_Cognitive.4", "PSI_Cognitive.5", "PSI_Cognitive.6"),
-       'PSI Affective'=c("PSI_Affective.1", "PSI_Affective.2", "PSI_Affective.3.R"),
-       'PSI Behavioral'=c("PSI_Behavioral.1.R", "PSI_Behavioral.2", "PSI_Behavioral.3")) %>%
-  scoreItems(., vgv, impute="none") %>% 
-  .$alpha %>% 
+       'PSI_Affective'=c("PSI_Affective.1", "PSI_Affective.2", "PSI_Affective.3.R"),
+       'PSI_Behavioral'=c("PSI_Behavioral.1.R", "PSI_Behavioral.2", "PSI_Behavioral.3"),
+     'playerEfficacy' = c("playerSkill", "playerExp", "playerBetterThanAvg", "playerBetterThanViewer")) %>%
+  scoreItems(., qualtrics, impute="none") %>% 
+  .$alpha %>% t() %>%
   kable(digits = 3)
 ```
 
+# Univariate Statistics
+
+## Measures
+
+Get univariate measures of central tendency and variance for survey measures of interest
+```{r univar-measures, results='asis'}
+
+vars <- c("IMI_Enjoyment", "PSI_Cognitive", "PSI_Affective", "PSI_Behavioral",
+          "playerSkill", "playerExp", "playerBetterThanAvg", "playerBetterThanViewer")
+qualtrics %>% summarise_at(vars, mean, na.rm = T) -> means
+qualtrics %>% summarise_at(vars, sd, na.rm = T) -> sds
+
+bind_rows(means, sds) %>% t() %>% kable(col.names = c("Mean", "SD"), digits = 3)
+```
