@@ -139,6 +139,10 @@ ret <- ret %>% filter(!((id == 3304 | id == 3529) & wave == 2))
 ret[ret$id==4993 & ret$age == 19,"id"] <- 9901
 ret[ret$id==4993 & ret$age == 22, "id"] <- 9902
 
+# Participants with code 5569 have to be manually removed since there is no
+# way to differentiate them
+gsr <- gsr %>% filter(id != 5569)
+
 # export ------------------------------------------------------------------
 
 # Export clean and merged CSV file

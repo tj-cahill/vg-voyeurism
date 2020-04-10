@@ -261,8 +261,16 @@ pre[pre$id==4993 & pre$age == 22, "id"] <- 9902
 post[post$id==4993 & post$age == 19,"id"] <- 9901
 post[post$id==4993 & post$age == 22, "id"] <- 9902
 
+# Participants with code 5569 have to be manually removed since there is no
+# way to differentiate them
+pre <- pre %>% filter(id != 5569)
+post <- post %>% filter(id != 5569)
+
 # merge -------------------------------------------------------------------
 qualtrics_full <- right_join(pre, post, by = c("id", "wave"))
 
 # export ------------------------------------------------------------------
 write_csv(qualtrics_full, "data/Qualtrics_merged.csv")
+
+# Export as RMD as well for easy transfer to the diagnostics notebook
+saveRDS(qualtrics_full, file = "data/Qualtrics_merged.rds")

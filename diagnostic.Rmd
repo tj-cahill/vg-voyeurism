@@ -12,12 +12,20 @@ library(dplyr)
 library(knitr)
 library(psych)
 readRDS(file = "data/merged_all.rds") -> vgv
+readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 ```
 
 # Basics
 First, calculate the *n* for the study based on the number of unique participant IDs in the dataset.
 ```{r n-calc}
-vgv$id %>% unique() %>% length() -> n
+vgv$id %>% unique() %>% length() -> n.all
+qualtrics$id %>% unique() %>% length() -> n.qualtrics
+
+if (n.all == n.qualtrics) {
+  print(n.all)
+} else {
+  print("ERROR: Number of participant IDs inconsistent across datasets.")
+}
 ```
 *n* = `r n`
 
