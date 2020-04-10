@@ -45,7 +45,7 @@ list('IMI_Enjoyment'=c("IMI_Enjoyment.1", "IMI_Enjoyment.2", "IMI_Enjoyment.3.R"
      'playerEfficacy' = c("playerSkill", "playerExp", "playerBetterThanAvg", "playerBetterThanViewer")) %>%
   scoreItems(., qualtrics, impute="none") %>% 
   .$alpha %>% t() %>%
-  kable(digits = 3)
+  kable(col.names = "Cronbach's &alpha;", digits = 3)
 ```
 
 # Univariate Statistics
