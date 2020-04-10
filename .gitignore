@@ -10,10 +10,10 @@
 *.xlsx
 *.nb.html
 *.html
+*.md
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 .DS_Store
 /data
-
