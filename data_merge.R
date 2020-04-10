@@ -54,3 +54,12 @@ all <- left_join(imotions, qualtrics, by = c("id", "wave",
 # dedupe ------------------------------------------------------------------
 
 all <- all %>% distinct()
+
+
+# export ------------------------------------------------------------------
+
+# Export merged dataset as a CSV file for records
+write_csv(all, "data/merged_all.csv")
+
+# Also export as RDS for easy transfer to analysis script
+saveRDS(all, file = "data/merged_all.rds")
