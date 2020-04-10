@@ -254,12 +254,12 @@ post <- post %>% filter(!((id == 3304 | id == 3529) & wave == 2))
 # Participant codes 4993 and 5569 were accidentally re-used for different 
 # participants >> recode IDs to avoid duplication
 
-# Participants with code 4993 can be differentiated based on age, with new IDs
-# manually assigned
-pre[pre$id==4993 & pre$age == 19,"id"] <- 9901
-pre[pre$id==4993 & pre$age == 22, "id"] <- 9902
-post[post$id==4993 & post$age == 19,"id"] <- 9901
-post[post$id==4993 & post$age == 22, "id"] <- 9902
+# Participants with duplicate codes can be differentiated based on sequence, 
+# with new codes manually assigned
+alt_ids <- as.tbl(data.frame(id=c("9901", "9902"), stringsAsFactors = F))
+
+pre[pre$id == 4993, "id"] <- alt_ids
+post[post$id == 4993, "id"] <- alt_ids
 
 # Participants with code 5569 have to be manually removed since there is no
 # way to differentiate them
