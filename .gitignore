@@ -8,9 +8,11 @@
 *.sav
 *.xls
 *.xlsx
+*.nb.html
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 .DS_Store
 /data
+
