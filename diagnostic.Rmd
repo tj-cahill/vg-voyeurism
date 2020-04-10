@@ -9,6 +9,7 @@ This script takes the cleaned output from the DATA_MERGE script and runs diagnos
 
 ```{r setup, include=FALSE}
 library(dplyr)
+library(knitr)
 library(psych)
 readRDS(file = "data/merged_all.rds") -> vgv
 ```
@@ -26,12 +27,15 @@ vgv$id %>% unique() %>% length() -> n
 ## Reliability
 
 Several of the state DVs in the post-test questionnaire were multi-item batteries. While these scales have all been previously validated, we should check the reliability of our measurements nevertheless.
-```{r reliability}
-list(IMI_Enjoyment=c("IMI_Enjoyment.1", "IMI_Enjoyment.2", "IMI_Enjoyment.3.R", 
-                     "IMI_Enjoyment.4.R", "IMI_Enjoyment.5", "IMI_Enjoyment.6", "IMI_Enjoyment.7"), 
-     PSI_Cognitive=c("PSI_Cognitive.1", "PSI_Cognitive.2.R", "PSI_Cognitive.3",
+```{r reliability, results='asis'}
+list('IMI Enjoyment'=c("IMI_Enjoyment.1", "IMI_Enjoyment.2", "IMI_Enjoyment.3.R", 
+                     "IMI_Enjoyment.4.R", "IMI_Enjoyment.5", "IMI_Enjoyment.6", "IMI_Enjoyment.7"),
+       'PSI Cognitive'=c("PSI_Cognitive.1", "PSI_Cognitive.2.R", "PSI_Cognitive.3",
                      "PSI_Cognitive.4", "PSI_Cognitive.5", "PSI_Cognitive.6"),
-     PSI_Affective=c("PSI_Affective.1", "PSI_Affective.2", "PSI_Affective.3.R"),
-     PSI_Behavioral=c("PSI_Behavioral.1.R", "PSI_Behavioral.2", "PSI_Behavioral.3")) %>%
-  scoreItems(., vgv, impute="none") %>% .$alpha
+       'PSI Affective'=c("PSI_Affective.1", "PSI_Affective.2", "PSI_Affective.3.R"),
+       'PSI Behavioral'=c("PSI_Behavioral.1.R", "PSI_Behavioral.2", "PSI_Behavioral.3")) %>%
+  scoreItems(., vgv, impute="none") %>% 
+  .$alpha %>% 
+  kable(digits = 3)
 ```
+
