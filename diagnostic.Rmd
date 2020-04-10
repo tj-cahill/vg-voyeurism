@@ -1,0 +1,18 @@
+---
+title: "Watching Video Games - Diagnostics"
+author: "Tiernan J. Cahill"
+output: html_notebook
+---
+
+This script takes the cleaned output from the DATA_MERGE script and runs diagnostics and outputs univariate stats for the first part of the analysis, setting the groundwork for later hypothesis tests. 
+
+```{r setup, include=FALSE}
+library(dplyr)
+```
+
+First, we import the merged dataset.
+
+```{r import}
+readRDS(file = "data/merged_all.rds") -> vgv
+```
+
