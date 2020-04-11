@@ -136,12 +136,12 @@ ret <- ret %>% filter(!((id == 3304 | id == 3529) & wave == 2))
 
 # Participants with code 4993 can be differentiated based on age, with new IDs
 # manually assigned
-gsr[gsr$id==4993 & gsr$age == 22, "id"] <- 9901
-gsr[gsr$id==4993 & gsr$age == 19, "id"] <- 9902
+ret[ret$id==4993 & ret$age == 22, "id"] <- 9901
+ret[ret$id==4993 & ret$age == 19, "id"] <- 9902
 
 # Participants with code 5569 have to be manually removed since there is no
 # way to differentiate them
-gsr <- gsr %>% filter(id != 5569)
+ret <- ret %>% filter(id != 5569)
 
 # export ------------------------------------------------------------------
 
