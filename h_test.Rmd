@@ -1,5 +1,5 @@
 ---
-title: "Watching Video Games - Diagnostics"
+title: "Watching Video Games - Analysis"
 author: "Tiernan J. Cahill"
 output: html_notebook
 ---
@@ -8,10 +8,7 @@ This script takes the cleaned output from the DATA_MERGE script and runs hypothe
 
 ```{r setup, include=FALSE}
 library(dplyr)
-```
-
-As before, we begin by importing the merged dataset.
-
-```{r import}
+library(knitr)
 readRDS(file = "data/merged_all.rds") -> vgv
+readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 ```
