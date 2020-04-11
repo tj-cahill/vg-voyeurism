@@ -54,9 +54,24 @@ list('IMI_Enjoyment'=c("IMI_Enjoyment.1", "IMI_Enjoyment.2", "IMI_Enjoyment.3.R"
 
 # Univariate Statistics
 
+## Demographics
+Get some basic measures of the demographic breakdown of the sample, starting
+with gender and age.
+```{r demo-gender, results='asis'}
+table(qualtrics$gender) %>% 
+  rbind(prop.table(table(qualtrics$gender))) %>% 
+  t() %>% kable(col.names = c("Frequency", "%"), digits = 3)
+```
+
+```{r demo-age, results='asis'}
+qualtrics %>% summarise("Median Age" = median(age), IQR = IQR(age)) %>% 
+  kable()
+```
+
+
 ## Measures
 
-Get univariate measures of central tendency and variance for survey measures of interest
+Get univariate measures of central tendency and variance for survey measures of interest.
 ```{r univar-measures, results='asis'}
 
 vars <- c("IMI_Enjoyment", "PSI_Cognitive", "PSI_Affective", "PSI_Behavioral",
