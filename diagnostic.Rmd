@@ -58,9 +58,14 @@ list('IMI_Enjoyment'=c("IMI_Enjoyment.1", "IMI_Enjoyment.2", "IMI_Enjoyment.3.R"
 Get some basic measures of the demographic breakdown of the sample, starting
 with gender and age.
 ```{r demo-gender, results='asis'}
-table(qualtrics$gender) %>% 
-  rbind(prop.table(table(qualtrics$gender)) * 100) %>% 
-  t() %>% kable(col.names = c("Frequency", "%"), digits = 3)
+# We're going to use this again, so make it a function
+freq_kable <- function(df, x, digits = 3) {
+  table(df[,x]) %>% 
+  rbind(prop.table(table(df[,x])) * 100) %>% 
+  t() %>% kable(col.names = c("Frequency", "%"), digits = digits)
+}
+
+qualtrics %>% freq_kable("gender")
 ```
 
 ```{r demo-age, results='asis'}
@@ -71,9 +76,7 @@ qualtrics %>% summarise("Median Age" = median(age), IQR = IQR(age)) %>%
 Since the study depends in large part on the participants being able to understand and follow along with the streamer (to the point where they can form a parasocial connection), we also want to see how many participants learned English as a first language.
 
 ```{r demo-lang, results='asis'}
-table(qualtrics$firstLang) %>% 
-  rbind(prop.table(table(qualtrics$firstLang)) * 100) %>% 
-  t() %>% kable(col.names = c("Frequency", "%"), digits = 3)
+qualtrics %>% freq_kable("firstLang")
 ```
 ## Measures
 
