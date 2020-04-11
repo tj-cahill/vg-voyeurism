@@ -19,8 +19,27 @@ readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 H1 is that *viewers with a higher degree of parasocial interaction with the streamer will also experience a higher degree of enjoyment*. This can be assessed through simple bivariate correlation of the self-report measures.
 
 ```{r h1}
-cor.test(~ PSI_Overall + IMI_Enjoyment, qualtrics) -> h1.test
+cor.test(~ PSI_Overall + IMI_Enjoyment, qualtrics, alternative = "greater") -> h1.test # One-sided test
 print(h1.test)
 ```
 
-The hypothesis is **supported** (*r* = `r h1.test$estimate %>% round(3)`, *p* = `r h1.test$p.value %>% round(3)`). **(Note for future reference: all reports of *p = 0* are actually *p < .001* due to Base R's rounding function.)**
+The hypothesis is **supported**: *r* = `r h1.test$estimate %>% round(3)`, *p* = `r h1.test$p.value %>% round(3)`. **(Note for future reference: all reports of *p = 0* are actually *p < .001* due to Base R's rounding function.)**
+
+## Hypothesis 2: Facecam -> PSI
+H2 is that *viewers in the condition where the facecam was present will experience a higher degree of parasocial interaction than viewers in the condition where the facecam was absent*. This can be assessed with an independent-sample T test.
+
+```{r h2}
+# First, we need a version of the full dataset with one row per participant, 
+# containing their assigned condition and their self-reported PSI
+vgv %>% select(id, stimFace, PSI_Overall) %>% unique() -> h2.data
+
+# First test for homogeneity of variance
+bartlett.test(PSI_Overall ~ stimFace, vgv) -> h2.bartlett_test
+h2.var_equal <- if(h2.bartlett_test$p.value > 0.05) TRUE else FALSE
+print(h2.bartlett_test)
+
+t.test(PSI_Overall ~ stimFace, vgv, var.equal = h2.var_equal, alternative = "less") -> h2.test # One-sided test
+print(h2.test)
+```
+
+The hypothesis is **supported**: *t*(`r h2.test$parameter`) = `r h2.test$statistic %>% round(3)`, *p* = `r h2.test$p.value %>% round(3)`.
