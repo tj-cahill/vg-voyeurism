@@ -241,7 +241,16 @@ post <- post %>%
   mutate(IMI_Enjoyment = (IMI_Enjoyment.1 + IMI_Enjoyment.2 + IMI_Enjoyment.3.R + IMI_Enjoyment.4.R + IMI_Enjoyment.5 + IMI_Enjoyment.6 + IMI_Enjoyment.7)/7,
          PSI_Cognitive = (PSI_Cognitive.1 + PSI_Cognitive.2.R + PSI_Cognitive.3 + PSI_Cognitive.4 + PSI_Cognitive.5 + PSI_Cognitive.6)/6,
          PSI_Affective = (PSI_Affective.1 + PSI_Affective.2 + PSI_Affective.3.R)/3,
-         PSI_Behavioral = (PSI_Behavioral.1.R + PSI_Behavioral.2 + PSI_Behavioral.3)/3)
+         PSI_Behavioral = (PSI_Behavioral.1.R + PSI_Behavioral.2 + PSI_Behavioral.3)/3,
+         PSI_Overall = (PSI_Cognitive.1 + PSI_Cognitive.2.R + PSI_Cognitive.3 + 
+                        PSI_Cognitive.4 + PSI_Cognitive.5 + PSI_Cognitive.6 + 
+                        PSI_Affective.1 + PSI_Affective.2 + PSI_Affective.3.R + 
+                        PSI_Behavioral.1.R + PSI_Behavioral.2 + PSI_Behavioral.3)/12)
+
+# Score perceived player efficacy scale
+post <- post %>%
+  mutate(playerEfficacy = (playerSkill + playerExp +
+                          playerBetterThanAvg + playerBetterThanViewer)/4)
 
 # dedupe ------------------------------------------------------------------
 

@@ -42,7 +42,11 @@ list('IMI_Enjoyment'=c("IMI_Enjoyment.1", "IMI_Enjoyment.2", "IMI_Enjoyment.3.R"
                      "PSI_Cognitive.4", "PSI_Cognitive.5", "PSI_Cognitive.6"),
        'PSI_Affective'=c("PSI_Affective.1", "PSI_Affective.2", "PSI_Affective.3.R"),
        'PSI_Behavioral'=c("PSI_Behavioral.1.R", "PSI_Behavioral.2", "PSI_Behavioral.3"),
-     'playerEfficacy' = c("playerSkill", "playerExp", "playerBetterThanAvg", "playerBetterThanViewer")) %>%
+       'PSI_Overall'=c("PSI_Cognitive.1", "PSI_Cognitive.2.R", "PSI_Cognitive.3",
+                       "PSI_Cognitive.4", "PSI_Cognitive.5", "PSI_Cognitive.6",
+                       "PSI_Affective.1", "PSI_Affective.2", "PSI_Affective.3.R",
+                       "PSI_Behavioral.1.R", "PSI_Behavioral.2", "PSI_Behavioral.3"),
+       'playerEfficacy' = c("playerSkill", "playerExp", "playerBetterThanAvg", "playerBetterThanViewer")) %>%
   scoreItems(., qualtrics, impute="none") %>% 
   .$alpha %>% t() %>%
   kable(col.names = "Cronbach's &alpha;", digits = 3)
@@ -56,7 +60,8 @@ Get univariate measures of central tendency and variance for survey measures of 
 ```{r univar-measures, results='asis'}
 
 vars <- c("IMI_Enjoyment", "PSI_Cognitive", "PSI_Affective", "PSI_Behavioral",
-          "playerSkill", "playerExp", "playerBetterThanAvg", "playerBetterThanViewer")
+          "PSI_Overall", "playerSkill", "playerExp", "playerBetterThanAvg", 
+          "playerBetterThanViewer", "playerEfficacy")
 qualtrics %>% summarise_at(vars, mean, na.rm = T) -> means
 qualtrics %>% summarise_at(vars, sd, na.rm = T) -> sds
 
