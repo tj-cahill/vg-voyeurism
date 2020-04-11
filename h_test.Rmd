@@ -12,3 +12,15 @@ library(knitr)
 readRDS(file = "data/merged_all.rds") -> vgv
 readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 ```
+
+
+# Hypothesis Testing
+## Hypothesis 1: PSI -> Enjoyment
+H1 is that *viewers with a higher degree of parasocial interaction with the streamer will also experience a higher degree of enjoyment*. This can be assessed through simple bivariate correlation of the self-report measures.
+
+```{r h1}
+cor.test(~ PSI_Overall + IMI_Enjoyment, qualtrics) -> h1.test
+print(h1.test)
+```
+
+The hypothesis is **supported** (*r* = `r h1.test$estimate %>% round(3)`, *p* = `r h1.test$p.value %>% round(3)`). **(Note for future reference: all reports of *p = 0* are actually *p < .001* due to Base R's rounding function.)**
