@@ -71,6 +71,9 @@ qualtrics %>% freq_kable("gender")
 ```{r demo-age, results='asis'}
 qualtrics %>% summarise("Median Age" = median(age), IQR = IQR(age)) %>% 
   kable()
+
+# Let's throw in a histogram as well
+hist(qualtrics$age, xlab="Age", main=NA)
 ```
 
 Since the study depends in large part on the participants being able to understand and follow along with the streamer (to the point where they can form a parasocial connection), we also want to see how many participants learned English as a first language.
