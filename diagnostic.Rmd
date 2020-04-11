@@ -59,7 +59,7 @@ Get some basic measures of the demographic breakdown of the sample, starting
 with gender and age.
 ```{r demo-gender, results='asis'}
 table(qualtrics$gender) %>% 
-  rbind(prop.table(table(qualtrics$gender))) %>% 
+  rbind(prop.table(table(qualtrics$gender)) * 100) %>% 
   t() %>% kable(col.names = c("Frequency", "%"), digits = 3)
 ```
 
@@ -68,7 +68,13 @@ qualtrics %>% summarise("Median Age" = median(age), IQR = IQR(age)) %>%
   kable()
 ```
 
+Since the study depends in large part on the participants being able to understand and follow along with the streamer (to the point where they can form a parasocial connection), we also want to see how many participants learned English as a first language.
 
+```{r demo-lang, results='asis'}
+table(qualtrics$firstLang) %>% 
+  rbind(prop.table(table(qualtrics$firstLang)) * 100) %>% 
+  t() %>% kable(col.names = c("Frequency", "%"), digits = 3)
+```
 ## Measures
 
 Get univariate measures of central tendency and variance for survey measures of interest.
