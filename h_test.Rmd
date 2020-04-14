@@ -60,3 +60,12 @@ print(h3.test)
 ```
 
 The hypothesis is **not supported**: *W* = `r h3.test$statistic %>% round(3)`, *p* = `r h3.test$p.value %>% round(3)`
+
+## Hypothesis 4: Attention -> Parasocial Interaction
+H4 is that *viewers who allocate more attention to the streamer's face (where the facecam is displayed) will experience a proportionately greater level of parasocial interaction*.
+
+## Hypothesis 5: Attention -> Arousal
+H5 is that *viewers who allocate more attention to the streamer's face (where the facecam is displayed) will experience a proportionately higher level of emotional arousal*.
+
+## Hypothesis 6: Arousal -> Enjoyment
+H6 is that *viewers who experience a higher level of emotional arousal will also experience a proportionately higher degree of enjoyment*.
