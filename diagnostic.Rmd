@@ -52,6 +52,39 @@ list('IMI_Enjoyment'=c("IMI_Enjoyment.1", "IMI_Enjoyment.2", "IMI_Enjoyment.3.R"
   kable(col.names = "Cronbach's &alpha;", digits = 3)
 ```
 
+## Normality
+We should also check the assumptions of normality for some of the variables of interest. For this, we use the Shapiro-Wilk testto test the hypothesis of normality on each variable. (*Note: This may be subject to issues related to multiple testing. If we want to be very conservative, we could apply a Bonferroni correction.*)
+
+```{r normality, results='asis'}
+multi_shapiro <- function (var_list, alpha = 0.05) {
+  norm_test <- data.frame(var = character(length = length(var_list)),
+                        stat = numeric(length = length(var_list)), 
+                        pval = numeric(length = length(var_list)),
+                        normal = logical(length = length(var_list)))
+
+  norm_test$var <- var_list
+
+  for (x in norm_test$var) {
+    shapiro.test(qualtrics[,x][[1]]) -> shapiro.output
+    shapiro.output[1][[1]] -> norm_test[norm_test$var == x, "stat"]
+    shapiro.output[2][[1]] -> norm_test[norm_test$var == x, "pval"]
+    if (shapiro.output[2][[1]] < alpha) FALSE else TRUE -> 
+      norm_test[norm_test$var == x, "normal"]
+  }
+  return(norm_test)
+}
+
+list("IMI_Enjoyment", 
+     "PSI_Overall",
+     "PSI_Cognitive",
+     "PSI_Affective",
+     "PSI_Behavioral",
+      "playerEfficacy") %>% 
+  multi_shapiro() %>%
+  kable(digits = 3)
+```
+
+
 # Univariate Statistics
 
 ## Demographics
