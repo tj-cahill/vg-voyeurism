@@ -9,6 +9,8 @@ This script takes the cleaned output from the DATA_MERGE script and runs hypothe
 ```{r setup, include=FALSE}
 library(dplyr)
 library(knitr)
+library(ggplot2)
+library(ggpubr)
 readRDS(file = "data/merged_all.rds") -> vgv
 readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 ```
@@ -19,6 +21,11 @@ readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 H1 is that *viewers with a higher degree of parasocial interaction with the streamer will also experience a higher degree of enjoyment*. This can be assessed through simple bivariate correlation of the self-report measures. (*Note: In this case, we are using Spearman's correlation, because Enjoyment is not normally distributed*).
 
 ```{r h1}
+# Display a scatter plot
+ggplot(qualtrics, aes(x=PSI_Overall, y=IMI_Enjoyment)) + geom_point() +
+  geom_smooth(method = lm) +
+  xlab("PSI") + ylab("Enjoyment")
+
 cor.test(~ PSI_Overall + IMI_Enjoyment, qualtrics, alternative = "greater", method="spearman") -> h1.test # One-sided test
 print(h1.test)
 ```
@@ -32,6 +39,10 @@ H2 is that *viewers in the condition where the facecam was present will experien
 # First, we need a version of the full dataset with one row per participant, 
 # containing their assigned condition and their self-reported PSI
 vgv %>% select(id, stimFace, PSI_Overall) %>% unique() -> h2.data
+
+# Visualize the difference between groups using a boxplot
+ggboxplot(h2.data, x = "stimFace", y = "PSI_Overall",
+          xlab = "Facecam Present", ylab = "PSI")
 
 # First test for homogeneity of variance
 bartlett.test(PSI_Overall ~ stimFace, h2.data) -> h2.bartlett_test
@@ -53,6 +64,12 @@ H3 is that *the gender of the streamer will affect the perceived efficacy of the
 # containing their assigned condition and their perception of the streamer's
 # efficacy
 vgv %>% select(id, stimGender, playerEfficacy) %>% unique() -> h3.data
+
+# Visualize the difference between groups using a boxplot
+ggboxplot(h3.data, x = "stimGender", y = "playerEfficacy",
+          color = "stimGender", legend = "none",
+          xlab = "Streamer Gender", ylab = "Perceived Efficacy")
+  
 
 wilcox.test(playerEfficacy ~ stimGender, h3.data, 
        alternative = "two.sided") -> h3.test # Two-sided test
