@@ -86,3 +86,34 @@ H5 is that *viewers who allocate more attention to the streamer's face (where th
 
 ## Hypothesis 6: Arousal -> Enjoyment
 H6 is that *viewers who experience a higher level of emotional arousal will also experience a proportionately higher degree of enjoyment*.
+
+```{r h6}
+# First, create a version of the dataset with one row per participant, 
+# containing their self-reported level of enjoyment, as well as an aggregate
+# measure of their arousal (GSR) across both stimuli
+vgv %>% filter(aoi == "GAME") %>%
+  group_by(id) %>% 
+  summarise(peakCount = sum(peakCount), 
+            peaksPerMin = mean(peaksPerMin), 
+            IMI_Enjoyment = first(IMI_Enjoyment)) -> 
+  h6.data
+
+# There are a few outliers in the biometric data, so use the simple 2*IQR rule 
+# to filter them out.
+h6.data.no_outliers <- h6.data %>% 
+  filter(peaksPerMin < median(h6.data$peaksPerMin, na.rm=T) + 2*IQR(h6.data$peaksPerMin, na.rm=T))
+
+# Generate a scatter plot 
+ggplot(h6.data.no_outliers, aes(x=peaksPerMin, y=IMI_Enjoyment)) + geom_point() +
+  geom_smooth(method = lm) +
+  xlab("Arousal") + ylab("Enjoyment")
+
+# Test the correlation (using Spearman again, since the variables are not
+# normally distributed)
+cor.test(~ IMI_Enjoyment + peaksPerMin, h6.data.no_outliers, 
+         alternative = "greater",
+         method="spearman") -> h6.test
+print(h6.test)
+```
+
+The hypothesis is **not supported**: *&rho;* = `r h6.test$estimate %>% round(3)`, *p* = `r h6.test$p.value %>% round(3)`.
