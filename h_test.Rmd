@@ -80,6 +80,42 @@ The hypothesis is **not supported**: *W* = `r h3.test$statistic %>% round(3)`, *
 
 ## Hypothesis 4: Attention -> Parasocial Interaction
 H4 is that *viewers who allocate more attention to the streamer's face (where the facecam is displayed) will experience a proportionately greater level of parasocial interaction*.
+```{r h4}
+# First, create a version of the dataset with one row per participant, 
+# containing their self-reported level of PSI, as well as an aggregate
+# measure of their relative attention allocation to the facecam (thus containg
+# participants in the facecam condition only )
+
+vgv %>% 
+  filter(aoi == "FACE") %>%
+  group_by(id) %>%
+  summarise(camRatioG = mean(perSpentG),
+            camRatioF = mean(perSpentF),
+            PSI_Overall = first(PSI_Overall)) ->
+  h4.data
+
+# Generate a scatter plot for gaze ratio
+ggplot(h4.data, aes(x=camRatioG, y=PSI_Overall)) + geom_point() +
+  geom_smooth(method = lm) +
+  xlab("% of Gaze on Facecam") + ylab("PSI")
+
+# Generate a scatter plot for fixation ratio
+ggplot(h4.data, aes(x=camRatioF, y=PSI_Overall)) + geom_point() +
+  geom_smooth(method = lm) +
+  xlab("% of Fixation on Facecam") + ylab("PSI")
+
+# Test the correlation for gaze
+cor.test(~ PSI_Overall + camRatioG, h4.data, 
+         alternative = "greater") -> h4.test.g
+print(h4.test.g)
+
+# Test the correlation for fixation (using Spearman because fixation ratio
+# isn't normally distributed)
+cor.test(~ PSI_Overall + camRatioF, h4.data, 
+         alternative = "greater",
+         method="spearman") -> h4.test.f
+print(h4.test.f)
+```
 
 ## Hypothesis 5: Attention -> Arousal
 H5 is that *viewers who allocate more attention to the streamer's face (where the facecam is displayed) will experience a proportionately higher level of emotional arousal*.
