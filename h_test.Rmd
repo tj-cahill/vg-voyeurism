@@ -162,7 +162,9 @@ vgv %>%
 # There are a few outliers in the arousal data, so use the simple 2*IQR rule 
 # to filter them out.
 h5.data.no_outliers <- h5.data %>% 
-  filter(peaksPerMin < median(h5.data$peaksPerMin, na.rm=T) + 2*IQR(h5.data$peaksPerMin, na.rm=T)) 
+  filter(peaksPerMin < median(h5.data$peaksPerMin, na.rm=T) + 2*IQR(h5.data$peaksPerMin, na.rm=T)) %>%
+  filter(peaksPerMin > median(h5.data$peaksPerMin, na.rm=T) -
+           2*IQR(h5.data$peaksPerMin, na.rm=T))
 
 # Generate a scatter plot for gaze ratio
 ggplot(h5.data.no_outliers, aes(x=faceRatioG, y=peaksPerMin)) + geom_point() +
@@ -188,6 +190,10 @@ cor.test(~ peaksPerMin + faceRatioF, h5.data.no_outliers,
          method="spearman") -> h5.test.f
 print(h5.test.f)
 ```
+The hypothesis is **not supported** for gaze measurement: *&rho;* = `r h5.test.g$estimate %>% round(3)`, *p* = `r h5.test.g$p.value %>% round(3)`.
+
+The hypothesis is **not supported** for fixation measurement: *&rho;* = `r h5.test.f$estimate %>% round(3)`, *p* = `r h5.test.f$p.value %>% round(3)`.
+
 
 ## Hypothesis 6: Arousal -> Enjoyment
 H6 is that *viewers who experience a higher level of emotional arousal will also experience a proportionately higher degree of enjoyment*.
@@ -206,7 +212,10 @@ vgv %>% filter(aoi == "GAME") %>%
 # There are a few outliers in the biometric data, so use the simple 2*IQR rule 
 # to filter them out.
 h6.data.no_outliers <- h6.data %>% 
-  filter(peaksPerMin < median(h6.data$peaksPerMin, na.rm=T) + 2*IQR(h6.data$peaksPerMin, na.rm=T))
+  filter(peaksPerMin < median(h6.data$peaksPerMin, na.rm=T) +
+           2*IQR(h6.data$peaksPerMin, na.rm=T)) %>%
+  filter(peaksPerMin > median(h6.data$peaksPerMin, na.rm=T) -
+           2*IQR(h6.data$peaksPerMin, na.rm=T))
 
 # Generate a scatter plot 
 ggplot(h6.data.no_outliers, aes(x=peaksPerMin, y=IMI_Enjoyment)) + geom_point() +
