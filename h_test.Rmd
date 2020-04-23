@@ -139,6 +139,55 @@ The hypothesis is **not supported** for fixation measurement: *&rho;* = `r h4.te
 
 ## Hypothesis 5: Attention -> Arousal
 H5 is that *viewers who allocate more attention to the streamer's face (where the facecam is displayed) will experience a proportionately higher level of emotional arousal*.
+```{r h5}
+# First, create a version of the dataset with one row per participant, 
+# containing aggregate measures of their relative attention allocation to the
+# facecam (thus containing participants in the facecam condition only ) and 
+# their arousal (GSR)
+
+vgv %>%
+  filter(stimFace == TRUE) %>%
+  group_by(id, aoi) %>%
+  summarise(totalG = sum(timeSpentG),
+            totalF = sum(timeSpentF),
+            peakCount = sum(peakCount),
+            peaksPerMin = mean(peaksPerMin)) %>%
+  ungroup() %>%
+  arrange(id, aoi) %>%
+  mutate(faceRatioG = totalG / (totalG+lead(totalG)),
+         faceRatioF = totalF / (totalF+lead(totalF))) %>%
+  filter(aoi == "FACE") %>%
+  select(-aoi, -totalG, -totalF) -> h5.data
+
+# There are a few outliers in the arousal data, so use the simple 2*IQR rule 
+# to filter them out.
+h5.data.no_outliers <- h5.data %>% 
+  filter(peaksPerMin < median(h5.data$peaksPerMin, na.rm=T) + 2*IQR(h5.data$peaksPerMin, na.rm=T)) 
+
+# Generate a scatter plot for gaze ratio
+ggplot(h5.data.no_outliers, aes(x=faceRatioG, y=peaksPerMin)) + geom_point() +
+  geom_smooth(method = lm) +
+  xlab("Ratio of Gaze on Facecam") + ylab("Arousal")
+
+# Generate a scatter plot for fixation ratio
+ggplot(h5.data.no_outliers, aes(x=faceRatioF, y=peaksPerMin)) + geom_point() +
+  geom_smooth(method = lm) +
+  xlab("Ratio of Fixation on Facecam") + ylab("Arousal")
+
+# Test the correlation for gaze (using Spearman because gaze ratio
+# isn't normally distributed)
+cor.test(~ peaksPerMin + faceRatioG, h5.data.no_outliers,
+         alternative = "greater",
+         method="spearman") -> h5.test.g
+print(h5.test.g)
+
+# Test the correlation for fixation (using Spearman because GSR data isn't
+# normally distributed)
+cor.test(~ peaksPerMin + faceRatioF, h5.data.no_outliers,
+         alternative = "greater",
+         method="spearman") -> h5.test.f
+print(h5.test.f)
+```
 
 ## Hypothesis 6: Arousal -> Enjoyment
 H6 is that *viewers who experience a higher level of emotional arousal will also experience a proportionately higher degree of enjoyment*.
