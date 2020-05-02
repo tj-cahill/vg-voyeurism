@@ -9,6 +9,8 @@ This script takes the cleaned output from the DATA_MERGE script and runs some ex
 ```{r setup, include=FALSE}
 library(dplyr)
 library(knitr)
+library(ggplot2)
+library(ggpubr)
 readRDS(file = "data/merged_all.rds") -> vgv
 readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 ```
@@ -42,7 +44,26 @@ vgv_unique %>% freq_kable("orientationMatch")
 Note that `r vgv_unique %>% filter(is.na(orientation)) %>% count() %>% .[[1]]` participants did not answer the question about sexual orientation and were excluded from subsequent analysis.
 
 ```{r rq1}
+rq1.data <- vgv %>% 
+  select(id, orientationMatch, PSI_Overall) %>%
+  filter(!is.na(orientationMatch)) %>%
+  unique()
+
+# Visualize the difference between groups using a boxplot
+ggboxplot(rq1.data, x = "orientationMatch", y = "PSI_Overall",
+          xlab = "Orientation Match", ylab = "PSI",
+          color = "orientationMatch", legend = "none")
+
+# First test for homogeneity of variance
+bartlett.test(PSI_Overall ~ orientationMatch, rq1.data)
+
+# Run a t-test
+t.test(PSI_Overall ~ orientationMatch, data = rq1.data,
+       var.equal = TRUE, alternative = "two.sided")
 ```
+
+From these results, it doesn't appear that there is a meaningful difference in 
+parasocial interaction between the two groups of interest.
 
 ## RQ2: Gender -> Arousal
 RQ2 is: *Will viewers whose sexual orientation aligns with the gender of the streamer experience different levels of physiological arousal than others?*
