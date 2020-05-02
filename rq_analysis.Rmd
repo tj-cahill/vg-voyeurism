@@ -68,7 +68,43 @@ parasocial interaction between the two groups of interest.
 ## RQ2: Gender -> Arousal
 RQ2 is: *Will viewers whose sexual orientation aligns with the gender of the streamer experience different levels of physiological arousal than others?*
 ```{r rq2}
+# First, create a version of the dataset with one row per participant,
+# an aggregate measure of their arousal (GSR) across both stimuli
+rq2.data <- vgv %>% 
+  filter(aoi == "GAME") %>%
+  group_by(id) %>% 
+  summarise(peakCount = sum(peakCount), 
+            peaksPerMin = mean(peaksPerMin),
+            orientationMatch = first(orientationMatch)) %>%
+  filter(!is.na(orientationMatch))
+
+# Visualize the difference between groups using a boxplot
+ggboxplot(rq2.data, x = "orientationMatch", y = "peaksPerMin",
+          xlab = "Orientation Match", ylab = "GSR",
+          color = "orientationMatch", legend = "none")
+
+# There are a few outliers in the biometric data, so use the simple 2*IQR rule 
+# to filter them out.
+rq2.data.no_outliers <- rq2.data %>% 
+  filter(peaksPerMin < median(rq2.data$peaksPerMin, na.rm=T) +
+           2*IQR(rq2.data$peaksPerMin, na.rm=T)) %>%
+  filter(peaksPerMin > median(rq2.data$peaksPerMin, na.rm=T) -
+           2*IQR(rq2.data$peaksPerMin, na.rm=T))
+
+# Visualize again
+ggboxplot(rq2.data.no_outliers, x = "orientationMatch", y = "peaksPerMin",
+          xlab = "Orientation Match", ylab = "GSR",
+          color = "orientationMatch", legend = "none")
+
+# Now test for homogeneity of variance
+bartlett.test(peaksPerMin ~ orientationMatch, rq2.data.no_outliers)
+
+# Run a t-test
+t.test(peaksPerMin ~ orientationMatch, data = rq2.data.no_outliers,
+       var.equal = TRUE, alternative = "two.sided")
 ```
+From these results, it also doesn't appear that there is a meaningful difference in 
+physiological arousal between the two groups of interest.
 
 ## RQ3: Gender -> Attention
 RQ3 is: *Will viewers whose sexual orientation aligns with the gender of the streamer allocate their attention differently than others?*
