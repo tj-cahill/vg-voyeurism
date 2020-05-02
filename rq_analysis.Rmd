@@ -12,3 +12,19 @@ library(knitr)
 readRDS(file = "data/merged_all.rds") -> vgv
 readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 ```
+
+# Research Questions
+## RQ1: Gender -> PSI
+RQ1 is: *Will viewers whose sexual orientation aligns with the gender of the streamer experience different levels of parasocial interaction (PSI) than others?*
+```{r rq1}
+```
+
+## RQ2: Gender -> Arousal
+RQ2 is: *Will viewers whose sexual orientation aligns with the gender of the streamer experience different levels of physiological arousal than others?*
+```{r rq2}
+```
+
+## RQ3: Gender -> Attention
+RQ3 is: *Will viewers whose sexual orientation aligns with the gender of the streamer allocate their attention differently than others?*
+```{r rq3}
+```
