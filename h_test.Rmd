@@ -4,7 +4,7 @@ author: "Tiernan J. Cahill"
 output: html_notebook
 ---
 
-This script takes the cleaned output from the DATA_MERGE script and runs hypothesis tests and inductive stats for the second part of the analysis, following diagnostics and univariate states.
+This script takes the cleaned output from the DATA_MERGE script and runs hypothesis tests and inductive stats for the second part of the analysis, following diagnostics and univariate stats.
 
 ```{r setup, include=FALSE}
 library(dplyr)
