@@ -1,0 +1,14 @@
+---
+title: "Watching Video Games - Secondary Analysis"
+author: "Tiernan J. Cahill"
+output: html_notebook
+---
+
+This script takes the cleaned output from the DATA_MERGE script and runs some exploratory data analysis, following hypothesis testing, to look at some of our additional research questions.
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(knitr)
+readRDS(file = "data/merged_all.rds") -> vgv
+readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
+```
