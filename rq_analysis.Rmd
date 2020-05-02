@@ -16,6 +16,31 @@ readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 # Research Questions
 ## RQ1: Gender -> PSI
 RQ1 is: *Will viewers whose sexual orientation aligns with the gender of the streamer experience different levels of parasocial interaction (PSI) than others?*
+
+This can be answered looking at self-report data alone, but first we need to determine for each participant whether their sexual orientation aligns with the gender of the streamer (i.e., for a participant who reports that they are interested in women or in all genders and were assigned to the condition with the female streamer).
+```{r calc-orientation, results='asis'}
+vgv <- vgv %>% 
+  mutate(orientationMatch = ((stimGender == "FEMALE" & orientation == "Women") |
+                             (stimGender == "MALE" & orientation == "Men") |
+                             (orientation == "Both")))
+
+# Let's take a quick look at the breakdown of orientations and matches
+# Recrate the function from the beginning of the analysis
+freq_kable <- function(df, x, digits = 3) {
+  table(df[,x]) %>% 
+  rbind(prop.table(table(df[,x])) * 100) %>% 
+  t() %>% kable(col.names = c("Frequency", "%"), digits = digits)
+}
+
+vgv_unique <- vgv %>% 
+  select(id, stimGender, gender, orientation, orientationMatch) %>%
+  unique()
+
+vgv_unique %>% freq_kable("orientation")
+vgv_unique %>% freq_kable("orientationMatch")
+```
+Note that `r vgv_unique %>% filter(is.na(orientation)) %>% count() %>% .[[1]]` participants did not answer the question about sexual orientation and were excluded from subsequent analysis.
+
 ```{r rq1}
 ```
 

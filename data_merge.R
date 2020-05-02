@@ -15,6 +15,7 @@ qualtrics <- read_csv("data/Qualtrics_merged.csv",
                       col_types = cols(id = col_character(),
                                        wave = col_integer(),
                                        gender = col_factor(levels = gender_levels),
+                                       orientation = col_factor(levels = c("Women", "Men", "Both", "None", "Other")),
                                        age = col_integer()))
 gsr <- read_csv("data/GSR_merged.csv",
                 col_types = cols(id = col_character(),
