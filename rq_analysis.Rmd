@@ -109,4 +109,44 @@ physiological arousal between the two groups of interest.
 ## RQ3: Gender -> Attention
 RQ3 is: *Will viewers whose sexual orientation aligns with the gender of the streamer allocate their attention differently than others?*
 ```{r rq3}
+# First, create a version of the dataset with one row per participant, 
+# containing aggregate measures of their relative attention allocation to the
+# facecam (thus containing participants in the facecam condition only)
+
+rq3.data <- vgv %>%
+  filter(stimFace == TRUE) %>%
+  group_by(id, aoi) %>%
+  summarise(totalG = sum(timeSpentG),
+            totalF = sum(timeSpentF),
+            orientationMatch = first(orientationMatch)) %>%
+  ungroup() %>%
+  arrange(id, aoi) %>%
+  mutate(faceRatioG = totalG / (totalG+lead(totalG)),
+         faceRatioF = totalF / (totalF+lead(totalF))) %>%
+  filter(aoi == "FACE") %>%
+  select(-aoi, -totalG, -totalF) %>%
+  filter(!is.na(orientationMatch))
+
+# Visualize the difference between groups using a boxplot
+ggboxplot(rq3.data, x = "orientationMatch", y = "faceRatioG",
+          xlab = "Orientation Match", ylab = "Gaze Ratio",
+          color = "orientationMatch", legend = "none")
+
+# Visualize the difference between groups using a boxplot
+ggboxplot(rq3.data, x = "orientationMatch", y = "faceRatioF",
+          xlab = "Orientation Match", ylab = "Fixation Ratio",
+          color = "orientationMatch", legend = "none")
+
+# Now test for homogeneity of variance
+bartlett.test(faceRatioG ~ orientationMatch, rq3.data)
+bartlett.test(faceRatioF ~ orientationMatch, rq3.data)
+
+# Run some t-tests
+t.test(faceRatioG ~ orientationMatch, data = rq3.data,
+       var.equal = TRUE, alternative = "two.sided")
+
+t.test(faceRatioF ~ orientationMatch, data = rq3.data,
+       var.equal = TRUE, alternative = "two.sided")
 ```
+
+From these results, it appears that there may be a slightly higher allocation of attention to the facecam among participants whose orientation matched the gender of the streamer, but the difference was marginal and did not approach statistical significance.
