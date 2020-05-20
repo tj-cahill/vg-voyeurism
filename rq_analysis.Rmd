@@ -17,7 +17,8 @@ readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 
 # Research Questions
 ## RQ1: Gender -> PSI
-RQ1 is: *Will viewers whose sexual orientation aligns with the gender of the streamer experience different levels of parasocial interaction (PSI) than others?*
+### Sexual Orientation
+RQ1a is: *Will viewers whose sexual orientation aligns with the gender of the streamer experience different levels of parasocial interaction (PSI) than others?*
 
 This can be answered looking at self-report data alone, but first we need to determine for each participant whether their sexual orientation aligns with the gender of the streamer (i.e., for a participant who reports that they are interested in women or in all genders and were assigned to the condition with the female streamer).
 ```{r calc-orientation, results='asis'}
@@ -43,22 +44,53 @@ vgv_unique %>% freq_kable("orientationMatch")
 ```
 Note that `r vgv_unique %>% filter(is.na(orientation)) %>% count() %>% .[[1]]` participants did not answer the question about sexual orientation and were excluded from subsequent analysis.
 
-```{r rq1}
-rq1.data <- vgv %>% 
+```{r rq1a}
+rq1a.data <- vgv %>% 
   select(id, orientationMatch, PSI_Overall) %>%
   filter(!is.na(orientationMatch)) %>%
   unique()
 
 # Visualize the difference between groups using a boxplot
-ggboxplot(rq1.data, x = "orientationMatch", y = "PSI_Overall",
+ggboxplot(rq1a.data, x = "orientationMatch", y = "PSI_Overall",
           xlab = "Orientation Match", ylab = "PSI",
           color = "orientationMatch", legend = "none")
 
 # First test for homogeneity of variance
-bartlett.test(PSI_Overall ~ orientationMatch, rq1.data)
+bartlett.test(PSI_Overall ~ orientationMatch, rq1a.data)
 
 # Run a t-test
-t.test(PSI_Overall ~ orientationMatch, data = rq1.data,
+t.test(PSI_Overall ~ orientationMatch, data = rq1a.data,
+       var.equal = TRUE, alternative = "two.sided")
+```
+
+From these results, it doesn't appear that there is a meaningful difference in 
+parasocial interaction between the two groups of interest.
+
+### Homophily
+RQ1b is: *Will viewers whose gender identity aligns with the gender of the streamer experience different levels of parasocial interaction (PSI) than others?*
+
+In order to test for possible homophily effects, we need to determine from the self-report data whether the gender expression of the streamer aligns with the identity of the viewer.
+```{r calc-homophily}
+vgv <- vgv %>% 
+  mutate(identityMatch = ((stimGender == "FEMALE" & gender == "FEMALE") |
+                             (stimGender == "MALE" & gender == "MALE")))
+```
+
+```{r rq1b}
+rq1b.data <- vgv %>% 
+  select(id, identityMatch, PSI_Overall) %>%
+  unique()
+
+# Visualize the difference between groups using a boxplot
+ggboxplot(rq1b.data, x = "identityMatch", y = "PSI_Overall",
+          xlab = "Homophily", ylab = "PSI",
+          color = "identityMatch", legend = "none")
+
+# First test for homogeneity of variance
+bartlett.test(PSI_Overall ~ identityMatch, rq1b.data)
+
+# Run a t-test
+t.test(PSI_Overall ~ identityMatch, data = rq1b.data,
        var.equal = TRUE, alternative = "two.sided")
 ```
 
@@ -66,59 +98,103 @@ From these results, it doesn't appear that there is a meaningful difference in
 parasocial interaction between the two groups of interest.
 
 ## RQ2: Gender -> Arousal
-RQ2 is: *Will viewers whose sexual orientation aligns with the gender of the streamer experience different levels of physiological arousal than others?*
-```{r rq2}
+### Sexual Orientation
+RQ2a is: *Will viewers whose sexual orientation aligns with the gender of the streamer experience different levels of physiological arousal than others?*
+```{r rq2a}
 # First, create a version of the dataset with one row per participant,
 # an aggregate measure of their arousal (GSR) across both stimuli
-rq2.data <- vgv %>% 
+rq2a.data <- vgv %>% 
   filter(aoi == "GAME") %>%
   group_by(id) %>% 
   summarise(peakCount = sum(peakCount), 
             peaksPerMin = mean(peaksPerMin),
-            orientationMatch = first(orientationMatch)) %>%
+            identityMatch = first(orientationMatch)) %>%
   filter(!is.na(orientationMatch))
 
 # Visualize the difference between groups using a boxplot
-ggboxplot(rq2.data, x = "orientationMatch", y = "peaksPerMin",
+ggboxplot(rq2a.data, x = "orientationMatch", y = "peaksPerMin",
           xlab = "Orientation Match", ylab = "GSR",
           color = "orientationMatch", legend = "none")
 
 # There are a few outliers in the biometric data, so use the simple 2*IQR rule 
 # to filter them out.
-rq2.data.no_outliers <- rq2.data %>% 
-  filter(peaksPerMin < median(rq2.data$peaksPerMin, na.rm=T) +
-           2*IQR(rq2.data$peaksPerMin, na.rm=T)) %>%
-  filter(peaksPerMin > median(rq2.data$peaksPerMin, na.rm=T) -
-           2*IQR(rq2.data$peaksPerMin, na.rm=T))
+rq2a.data.no_outliers <- rq2a.data %>% 
+  filter(peaksPerMin < median(rq2a.data$peaksPerMin, na.rm=T) +
+           2*IQR(rq2a.data$peaksPerMin, na.rm=T)) %>%
+  filter(peaksPerMin > median(rq2a.data$peaksPerMin, na.rm=T) -
+           2*IQR(rq2a.data$peaksPerMin, na.rm=T))
 
 # Visualize again
-ggboxplot(rq2.data.no_outliers, x = "orientationMatch", y = "peaksPerMin",
+ggboxplot(rq2a.data.no_outliers, x = "orientationMatch", y = "peaksPerMin",
           xlab = "Orientation Match", ylab = "GSR",
           color = "orientationMatch", legend = "none")
 
 # Now test for homogeneity of variance
-bartlett.test(peaksPerMin ~ orientationMatch, rq2.data.no_outliers)
+bartlett.test(peaksPerMin ~ orientationMatch, rq2a.data.no_outliers)
 
 # Run a t-test
-t.test(peaksPerMin ~ orientationMatch, data = rq2.data.no_outliers,
+t.test(peaksPerMin ~ orientationMatch, data = rq2a.data.no_outliers,
        var.equal = TRUE, alternative = "two.sided")
 ```
 From these results, it also doesn't appear that there is a meaningful difference in 
 physiological arousal between the two groups of interest.
 
+### Homophily
+RQ2b is: *Will viewers whose gender identity with the gender of the streamer experience different levels of physiological arousal than others?*
+
+```{r rq2b}
+# First, create a version of the dataset with one row per participant,
+# an aggregate measure of their arousal (GSR) across both stimuli
+rq2b.data <- vgv %>% 
+  filter(aoi == "GAME") %>%
+  group_by(id) %>% 
+  summarise(peakCount = sum(peakCount), 
+            peaksPerMin = mean(peaksPerMin),
+            identityMatch = first(identityMatch))
+
+# Visualize the difference between groups using a boxplot
+ggboxplot(rq2b.data, x = "identityMatch", y = "peaksPerMin",
+          xlab = "Homophily", ylab = "GSR",
+          color = "identityMatch", legend = "none")
+
+# There are a few outliers in the biometric data, so use the simple 2*IQR rule 
+# to filter them out.
+rq2b.data.no_outliers <- rq2b.data %>% 
+  filter(peaksPerMin < median(rq2b.data$peaksPerMin, na.rm=T) +
+           2*IQR(rq2b.data$peaksPerMin, na.rm=T)) %>%
+  filter(peaksPerMin > median(rq2b.data$peaksPerMin, na.rm=T) -
+           2*IQR(rq2b.data$peaksPerMin, na.rm=T))
+
+# Visualize again
+ggboxplot(rq2b.data.no_outliers, x = "identityMatch", y = "peaksPerMin",
+          xlab = "Homophily", ylab = "GSR",
+          color = "identityMatch", legend = "none")
+
+# Now test for homogeneity of variance
+bartlett.test(peaksPerMin ~ identityMatch, rq2b.data.no_outliers)
+
+# Run a t-test
+t.test(peaksPerMin ~ identityMatch, data = rq2b.data.no_outliers,
+       var.equal = TRUE, alternative = "two.sided")
+```
+From these results, it also doesn't appear that there is a meaningful difference in 
+physiological arousal between the two groups of interest.
+
+
 ## RQ3: Gender -> Attention
-RQ3 is: *Will viewers whose sexual orientation aligns with the gender of the streamer allocate their attention differently than others?*
-```{r rq3}
+### Sexual Orientation
+RQ3a is: *Will viewers whose sexual orientation aligns with the gender of the streamer allocate their attention differently than others?*
+```{r rq3a}
 # First, create a version of the dataset with one row per participant, 
 # containing aggregate measures of their relative attention allocation to the
 # facecam (thus containing participants in the facecam condition only)
 
-rq3.data <- vgv %>%
+rq3a.data <- vgv %>%
   filter(stimFace == TRUE) %>%
   group_by(id, aoi) %>%
   summarise(totalG = sum(timeSpentG),
             totalF = sum(timeSpentF),
-            orientationMatch = first(orientationMatch)) %>%
+            identityMatch = first(orientationMatch)) %>%
   ungroup() %>%
   arrange(id, aoi) %>%
   mutate(faceRatioG = totalG / (totalG+lead(totalG)),
@@ -128,25 +204,70 @@ rq3.data <- vgv %>%
   filter(!is.na(orientationMatch))
 
 # Visualize the difference between groups using a boxplot
-ggboxplot(rq3.data, x = "orientationMatch", y = "faceRatioG",
+ggboxplot(rq3a.data, x = "orientationMatch", y = "faceRatioG",
           xlab = "Orientation Match", ylab = "Gaze Ratio",
           color = "orientationMatch", legend = "none")
 
 # Visualize the difference between groups using a boxplot
-ggboxplot(rq3.data, x = "orientationMatch", y = "faceRatioF",
+ggboxplot(rq3a.data, x = "orientationMatch", y = "faceRatioF",
           xlab = "Orientation Match", ylab = "Fixation Ratio",
           color = "orientationMatch", legend = "none")
 
 # Now test for homogeneity of variance
-bartlett.test(faceRatioG ~ orientationMatch, rq3.data)
-bartlett.test(faceRatioF ~ orientationMatch, rq3.data)
+bartlett.test(faceRatioG ~ orientationMatch, rq3a.data)
+bartlett.test(faceRatioF ~ orientationMatch, rq3a.data)
 
 # Run some t-tests
-t.test(faceRatioG ~ orientationMatch, data = rq3.data,
+t.test(faceRatioG ~ orientationMatch, data = rq3a.data,
        var.equal = TRUE, alternative = "two.sided")
 
-t.test(faceRatioF ~ orientationMatch, data = rq3.data,
+t.test(faceRatioF ~ orientationMatch, data = rq3a.data,
+       var.equal = TRUE, alternative = "two.sided")
+```
+From these results, it appears that there may be a slightly higher allocation of attention to the facecam among participants whose orientation matched the gender of the streamer, but the difference was marginal and did not approach statistical significance.
+
+### Homophily
+RQ3b is: *Will viewers whose gender identity aligns with the gender of the streamer allocate their attention differently than others?*
+
+```{r rq3b}
+# First, create a version of the dataset with one row per participant, 
+# containing aggregate measures of their relative attention allocation to the
+# facecam (thus containing participants in the facecam condition only)
+
+rq3b.data <- vgv %>%
+  filter(stimFace == TRUE) %>%
+  group_by(id, aoi) %>%
+  summarise(totalG = sum(timeSpentG),
+            totalF = sum(timeSpentF),
+            identityMatch = first(identityMatch)) %>%
+  ungroup() %>%
+  arrange(id, aoi) %>%
+  mutate(faceRatioG = totalG / (totalG+lead(totalG)),
+         faceRatioF = totalF / (totalF+lead(totalF))) %>%
+  filter(aoi == "FACE") %>%
+  select(-aoi, -totalG, -totalF) %>%
+  filter(!is.na(identityMatch))
+
+# Visualize the difference between groups using a boxplot
+ggboxplot(rq3b.data, x = "identityMatch", y = "faceRatioG",
+          xlab = "Homophily", ylab = "Gaze Ratio",
+          color = "identityMatch", legend = "none")
+
+# Visualize the difference between groups using a boxplot
+ggboxplot(rq3b.data, x = "identityMatch", y = "faceRatioF",
+          xlab = "Homophily", ylab = "Fixation Ratio",
+          color = "identityMatch", legend = "none")
+
+# Now test for homogeneity of variance
+bartlett.test(faceRatioG ~ identityMatch, rq3b.data)
+bartlett.test(faceRatioF ~ identityMatch, rq3b.data)
+
+# Run some t-tests
+t.test(faceRatioG ~ identityMatch, data = rq3b.data,
+       var.equal = TRUE, alternative = "two.sided")
+
+t.test(faceRatioF ~ identityMatch, data = rq3b.data,
        var.equal = TRUE, alternative = "two.sided")
 ```
 
-From these results, it appears that there may be a slightly higher allocation of attention to the facecam among participants whose orientation matched the gender of the streamer, but the difference was marginal and did not approach statistical significance.
+From these results, it appears that there is no significant difference in the outcome of interest based on homophily.
