@@ -12,6 +12,7 @@ library(tidyr)
 library(knitr)
 library(ggplot2)
 library(ggpubr)
+library(car)
 readRDS(file = "data/merged_all.rds") -> vgv
 readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 ```
@@ -78,6 +79,89 @@ print(h3.test)
 ```
 
 The hypothesis is **not supported**: *W* = `r h3.test$statistic %>% round(3)`, *p* = `r h3.test$p.value %>% round(3)`
+
+### Experience Control
+There's a possibility that audience's perception of player skill is moderated by their own experience playing games.
+
+```{r h3b}
+# In this case, we want a version of the dataset that includes the previous 
+# variables from H3, but with the addition of measures of frequency of play
+vgv %>% select(id, stimGender, playerEfficacy, 
+               hrsWatchingRecordedVGContent_weekday,
+               hrsWatchingRecordedVGContent_weekend,
+               hrsWatchingStreamedVGContent_weekday,
+               hrsWatchingStreamedVGContent_weekend,
+               hrsPlayingSinglePlayer_weekday,
+               hrsPlayingSinglePlayer_weekend,
+               hrsPlayingMultiPlayer_weekday,
+               hrsPlayingMultiPlayer_weekend) %>% unique() -> h3b.data
+
+# Recode non-responses as zero hours
+h3b.data[is.na(h3b.data)] = 0
+
+# We can combine some of these measures together--since this level of granularity
+# probably isn't particularly helpful--to get aggregate levels of gameplay
+# and viewership per week
+h3b.data %>% transmute(id = id,
+                       stimGender = stimGender,
+                       playerEfficacy = playerEfficacy,
+                       hrsWatchingVGContent = hrsWatchingRecordedVGContent_weekday * 5 + 
+                                              hrsWatchingRecordedVGContent_weekend * 2 +
+                                              hrsWatchingStreamedVGContent_weekday * 5 +
+                                              hrsWatchingStreamedVGContent_weekend * 2,
+                       hrsPlayingGames = hrsPlayingSinglePlayer_weekday * 5 +
+                                         hrsPlayingSinglePlayer_weekend * 2 +
+                                         hrsPlayingMultiPlayer_weekday * 5 +
+                                         hrsPlayingMultiPlayer_weekend * 2) -> h3b.data
+
+
+
+# Let's visualize the results
+h3b.data %>% ggplot(aes(x=x)) +
+  geom_histogram(aes(x = hrsPlayingGames), fill = "#69b3a2", alpha = 0.4, binwidth = 5) +
+  geom_label(aes(x = 75, y = 35, label = "Hrs Playing Games"), color = "#69b3a2") +
+  geom_histogram(aes(x = hrsWatchingVGContent), fill = "#404080", alpha = 0.4, binwidth = 5) +
+  geom_label(aes(x = 75, y = 25, label = "Hrs Watching Games"), color = "#404080")
+
+# Confirm homogeneity of variance by group
+leveneTest(playerEfficacy ~ stimGender, h3b.data)
+
+# Remove outliers (defined as those who report spending more than 12 hours per day
+# on average eitehr watching or playing games)
+h3b.data %>% filter(hrsPlayingGames < 12*7 & hrsWatchingVGContent < 12*7) -> h3b.data
+
+h3b.model <- aov(playerEfficacy ~ hrsPlayingGames + hrsWatchingVGContent + stimGender, h3b.data)
+
+Anova(h3b.model, type = "III")
+```
+Visualization suggests that most respondents don't play games, but do watch some, and that there are a small number of extreme outliers in terms of both playing and watch (i.e., the figures are right-skewed).
+
+```{r h3b_p2}
+# Also check if there's a significant difference between players and non-players,
+# watchers and non-watchers
+h3b.data %>% mutate(player = hrsPlayingGames > 0,
+                    watcher = hrsWatchingVGContent > 0) -> h3b.data
+
+wilcox.test(playerEfficacy ~ player, h3b.data, 
+       alternative = "two.sided", correct = FALSE)
+
+wilcox.test(playerEfficacy ~ watcher, h3b.data,
+            alternative = "two.sided", correct = FALSE)
+```
+
+While the hypothesis is **not supported**, all of this seems to suggest that time spent
+watching VG content is more influential in determining perceived efficacy than either
+gender or play experience. Taking an exploratory approach, let's dive in further.
+
+```{r h3_exp}
+h3_exp.model <- lm(playerEfficacy ~ hrsWatchingVGContent, h3b.data)
+summary(h3_exp.model)
+
+h3b.data %>% ggscatter(x="hrsWatchingVGContent", y = "playerEfficacy", color="stimGender") + stat_smooth(method = "lm")
+```
+Interestingly, this suggests a small yet significant positive effect of past viewership on the perceived efficacy of the streamer.
+
+
 
 ## Hypothesis 4: Attention -> Parasocial Interaction
 H4 is that *viewers who allocate more attention to the streamer's face (where the facecam is displayed) will experience a proportionately greater level of parasocial interaction*.
