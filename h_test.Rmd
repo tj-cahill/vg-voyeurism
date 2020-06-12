@@ -156,6 +156,9 @@ gender or play experience. Taking an exploratory approach, let's dive in further
 ```{r h3_exp}
 h3_exp.model <- lm(playerEfficacy ~ hrsWatchingVGContent, h3b.data)
 summary(h3_exp.model)
+# This model has some issues -- come back and respecify
+par(mfrow = c(2, 2))
+plot(h3_exp.model)
 
 h3b.data %>% ggscatter(x="hrsWatchingVGContent", y = "playerEfficacy", color="stimGender") + stat_smooth(method = "lm")
 ```
