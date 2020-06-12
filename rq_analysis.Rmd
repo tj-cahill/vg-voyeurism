@@ -359,3 +359,84 @@ wilcox.test(faceRatioG ~ watcher, rq4a.data, alternative = "two.sided", correct 
 ```
 
 There is not a clear trend in terms of experienced players or watchers allocating their attention differentially to the facecam. Note, however, that this analysis implicitly excludes those participants in the non-facecam condition. We might also consider whether these factors affect overall attention allocation (i.e., whether people pay attention to the stimulus at all).
+
+```{r rq4b}
+rq4b.data <- vgv %>%
+  mutate(hrsWatchingVGContent = hrsWatchingRecordedVGContent_weekday * 5 + 
+                                hrsWatchingRecordedVGContent_weekend * 2 +
+                                hrsWatchingStreamedVGContent_weekday * 5 +
+                                hrsWatchingStreamedVGContent_weekend * 2,
+         hrsPlayingGames = hrsPlayingSinglePlayer_weekday * 5 +
+                           hrsPlayingSinglePlayer_weekend * 2 +
+                           hrsPlayingMultiPlayer_weekday * 5 +
+                           hrsPlayingMultiPlayer_weekend * 2) %>%
+  group_by(id) %>%
+  summarise(totalG = sum(timeSpentG),
+            totalF = sum(timeSpentF),
+            hrsWatchingVGContent = first(hrsWatchingVGContent),
+            hrsPlayingGames = first(hrsPlayingGames))
+
+rq4b.data[is.na(rq4b.data$hrsPlayingGames),]$hrsPlayingGames <- 0
+rq4b.data[is.na(rq4b.data$hrsWatchingVGContent),]$hrsWatchingVGContent <- 0
+
+rq4b.data %>% ggplot(aes(x = totalG)) +
+  geom_histogram(binwidth = 100000, aes(y = ..density.., fill = ..count..)) +
+  scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C") +
+  stat_function(fun=dnorm,
+                color="red",
+                args=list(mean=mean(rq4b.data$totalG), 
+                          sd=sd(rq4b.data$totalG)))
+
+rq4b.data <- rq4b.data %>% 
+  mutate(logG = log(totalG),
+         logF = log(totalF))
+
+# Remove outliers (those who report more than 12 hours a day)
+rq4b.data %>% filter(hrsPlayingGames < 12*7 & hrsWatchingVGContent < 12*7) -> rq4b.data
+
+rq4b.data %>% ggplot(aes(x = logG)) +
+  geom_histogram(binwidth = 0.25, aes(y = ..density.., fill = ..count..)) +
+  scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C") +
+  stat_function(fun=dnorm,
+                color="red",
+                args=list(mean=mean(rq4b.data$logG), 
+                          sd=sd(rq4b.data$logG)))
+
+rq4b.data %>% ggplot(aes(x = logF)) +
+  geom_histogram(binwidth = 0.25, aes(y = ..density.., fill = ..count..)) +
+  scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C") +
+  stat_function(fun=dnorm,
+                color="red",
+                args=list(mean=mean(rq4b.data$logF), 
+                          sd=sd(rq4b.data$logF)))
+
+# Remove visual outlier [id = 3694]
+rq4b.data <- rq4b.data %>% filter(id != 3694)
+
+
+rq4b.data %>%
+  ggplot(aes(x = hrsPlayingGames, y = logG)) +
+    geom_point() +
+    stat_smooth(method = "lm")
+
+rq4b.data %>%
+  ggplot(aes(x = hrsWatchingVGContent, y = logG)) +
+    geom_point() +
+    stat_smooth(method = "lm")
+
+rq4b.model <- lm(logG ~ hrsPlayingGames, data = rq4b.data)
+par(mfrow = c(2, 2))
+plot(rq4b.model)
+summary(rq4b.model)
+
+rq4b.data %>% mutate(player = hrsPlayingGames > 0,
+                    watcher = hrsWatchingVGContent > 0) -> rq4b.data
+
+bartlett.test(logG ~ player, rq4b.data)
+bartlett.test(logG ~ watcher, rq4b.data)
+
+wilcox.test(logG ~ player, rq4b.data, alternative = "two.sided", correct = F)
+wilcox.test(logG ~ watcher, rq4b.data, alternative = "two.sided", correct = F)
+```
+
+From the above, it also doesn't seem that experienced players of video games or watchers of streamed video game content allocate their overall attention significantly differently. (*Note*: Some steps taken above for cleaning and transforming the attention data should be cross-applied elsewhere within the analysis.)
