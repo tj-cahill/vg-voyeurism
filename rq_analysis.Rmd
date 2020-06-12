@@ -271,3 +271,91 @@ t.test(faceRatioF ~ identityMatch, data = rq3b.data,
 ```
 
 From these results, it appears that there is no significant difference in the outcome of interest based on homophily.
+
+## RQ4: Experience -> Attention
+RQ4 is: *Do viewers with high levels of experience playing video games allocate their attention differently than inexperienced players when watching a livestream?*
+
+```{r rq4a}
+# First, create a version of the dataset with one row per participant, 
+# containing aggregate measures of their relative attention allocation to the
+# facecam (thus containing participants in the facecam condition only)
+
+rq4a.data <- vgv %>%
+  filter(stimFace == TRUE) %>%
+  mutate(hrsWatchingVGContent = hrsWatchingRecordedVGContent_weekday * 5 + 
+                                hrsWatchingRecordedVGContent_weekend * 2 +
+                                hrsWatchingStreamedVGContent_weekday * 5 +
+                                hrsWatchingStreamedVGContent_weekend * 2,
+         hrsPlayingGames = hrsPlayingSinglePlayer_weekday * 5 +
+                           hrsPlayingSinglePlayer_weekend * 2 +
+                           hrsPlayingMultiPlayer_weekday * 5 +
+                           hrsPlayingMultiPlayer_weekend * 2) %>%
+  group_by(id, aoi) %>%
+  summarise(totalG = sum(timeSpentG),
+            totalF = sum(timeSpentF),
+            hrsWatchingVGContent = first(hrsWatchingVGContent),
+            hrsPlayingGames = first(hrsPlayingGames)) %>%
+  ungroup() %>%
+  arrange(id, aoi) %>%
+  mutate(faceRatioG = totalG / (totalG+lead(totalG)),
+         faceRatioF = totalF / (totalF+lead(totalF))) %>%
+  filter(aoi == "FACE") %>%
+  select(-aoi, -totalG, -totalF)
+
+# Respondents who did not report watching or playing games count as 0 hours
+rq4a.data[is.na(rq4a.data$hrsPlayingGames),]$hrsPlayingGames <- 0
+rq4a.data[is.na(rq4a.data$hrsWatchingVGContent),]$hrsWatchingVGContent <- 0
+
+# Remove outliers (those who report more than 12 hours a day)
+rq4a.data %>% filter(hrsPlayingGames < 12*7 & hrsWatchingVGContent < 12*7) -> rq4a.data
+
+rq4a.data %>%
+  ggplot(aes(x = cut(hrsPlayingGames, breaks = 3), y = faceRatioG)) + 
+    geom_boxplot()
+
+rq4a.data %>%
+  ggplot(aes(x = cut(hrsWatchingVGContent, breaks = 3), y = faceRatioG)) + 
+    geom_boxplot()
+
+rq4a.data %>%
+  ggplot(aes(x = hrsPlayingGames, y = faceRatioG)) +
+    geom_point() +
+    stat_smooth(method = "lm")
+
+rq4a.data %>%
+  ggplot(aes(x = hrsWatchingVGContent, y = faceRatioG)) +
+    geom_point() +
+    stat_smooth(method = "lm")
+
+rq4a.model.1 <- lm(faceRatioG ~ hrsPlayingGames, data = rq4a.data)
+par(mfrow = c(2, 2))
+plot(rq4a.model.1)
+summary(rq4a.model.1)
+
+rq4a.model.2 <- lm(faceRatioG ~ hrsWatchingVGContent, data = rq4a.data)
+par(mfrow = c(2, 2))
+plot(rq4a.model.2)
+summary(rq4a.model.2)
+
+rq4a.data %>% mutate(player = hrsPlayingGames > 0,
+                    watcher = hrsWatchingVGContent > 0) -> rq4a.data
+
+shapiro.test(rq4a.data$faceRatioG)
+rq4a.data %>% ggplot(aes(x = faceRatioG)) +
+  geom_histogram(binwidth = 0.025, aes(y = ..density.., fill = ..count..)) +
+  scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C") +
+  stat_function(fun=dnorm,
+                color="red",
+                args=list(mean=mean(rq4a.data$faceRatioG), 
+                          sd=sd(rq4a.data$faceRatioG)))
+# Note that gaze ratio is not (quite) normally distributed
+
+bartlett.test(faceRatioG ~ player, rq4a.data)
+bartlett.test(faceRatioG ~ watcher, rq4a.data)
+# And variances are not equal
+
+wilcox.test(faceRatioG ~ player, rq4a.data, alternative = "two.sided", correct = F)
+wilcox.test(faceRatioG ~ watcher, rq4a.data, alternative = "two.sided", correct = F)
+```
+
+There is not a clear trend in terms of experienced players or watchers allocating their attention differentially to the facecam. Note, however, that this analysis implicitly excludes those participants in the non-facecam condition. We might also consider whether these factors affect overall attention allocation (i.e., whether people pay attention to the stimulus at all).
