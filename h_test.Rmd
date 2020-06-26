@@ -20,7 +20,7 @@ readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 
 # Hypothesis Testing
 ## Hypothesis 1: PSI -> Enjoyment
-H1 is that *viewers with a higher degree of parasocial interaction with the streamer will also experience a higher degree of enjoyment*. This can be assessed through simple bivariate correlation of the self-report measures. (*Note: In this case, we are using Spearman's correlation, because Enjoyment is not normally distributed*).
+H1 is that *viewers with a higher degree of parasocial interaction with the streamer will also experience a higher degree of enjoyment*. This can be assessed through simple bivariate correlation of the self-report measures. (*Note: In this case, we are using Spearman's correlation, because enjoyment is not normally distributed*).
 
 ```{r h1}
 # Display a scatter plot
@@ -127,14 +127,16 @@ h3b.data %>% ggplot(aes(x=x)) +
 leveneTest(playerEfficacy ~ stimGender, h3b.data)
 
 # Remove outliers (defined as those who report spending more than 12 hours per day
-# on average eitehr watching or playing games)
+# on average either watching or playing games)
 h3b.data %>% filter(hrsPlayingGames < 12*7 & hrsWatchingVGContent < 12*7) -> h3b.data
 
 h3b.model <- aov(playerEfficacy ~ hrsPlayingGames + hrsWatchingVGContent + stimGender, h3b.data)
 
 Anova(h3b.model, type = "III")
 ```
-Visualization suggests that most respondents don't play games, but do watch some, and that there are a small number of extreme outliers in terms of both playing and watch (i.e., the figures are right-skewed).
+Visualization suggests that most respondents don't play games, but do watch some, and that there are a small number of extreme outliers in terms of both playing and watching (i.e., the figures are right-skewed).
+
+The ANCOVA model suggests that while there are still not significant differences in perceived player efficacy as a result of the streamer's gender, there is **significant covariance** between experience watching streamed video game content and the perceived efficacy of the streamer.
 
 ```{r h3b_p2}
 # Also check if there's a significant difference between players and non-players,
@@ -149,13 +151,14 @@ wilcox.test(playerEfficacy ~ watcher, h3b.data,
             alternative = "two.sided", correct = FALSE)
 ```
 
-While the hypothesis is **not supported**, all of this seems to suggest that time spent
+While the hypothesis is **not supported**, this seems to suggest that time spent
 watching VG content is more influential in determining perceived efficacy than either
-gender or play experience. Taking an exploratory approach, let's dive in further.
+gender or play experience.
 
 ```{r h3_exp}
 h3_exp.model <- lm(playerEfficacy ~ hrsWatchingVGContent, h3b.data)
 summary(h3_exp.model)
+
 # This model has some issues -- come back and respecify
 par(mfrow = c(2, 2))
 plot(h3_exp.model)
@@ -163,8 +166,6 @@ plot(h3_exp.model)
 h3b.data %>% ggscatter(x="hrsWatchingVGContent", y = "playerEfficacy", color="stimGender") + stat_smooth(method = "lm")
 ```
 Interestingly, this suggests a small yet significant positive effect of past viewership on the perceived efficacy of the streamer.
-
-
 
 ## Hypothesis 4: Attention -> Parasocial Interaction
 H4 is that *viewers who allocate more attention to the streamer's face (where the facecam is displayed) will experience a proportionately greater level of parasocial interaction*.
@@ -280,7 +281,6 @@ print(h5.test.f)
 The hypothesis is **not supported** for gaze measurement: *&rho;* = `r h5.test.g$estimate %>% round(3)`, *p* = `r h5.test.g$p.value %>% round(3)`.
 
 The hypothesis is **not supported** for fixation measurement: *&rho;* = `r h5.test.f$estimate %>% round(3)`, *p* = `r h5.test.f$p.value %>% round(3)`.
-
 
 ## Hypothesis 6: Arousal -> Enjoyment
 H6 is that *viewers who experience a higher level of emotional arousal will also experience a proportionately higher degree of enjoyment*.

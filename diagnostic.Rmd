@@ -21,20 +21,17 @@ First, calculate the *n* for the study based on the number of unique participant
 vgv$id %>% unique() %>% length() -> n.all
 qualtrics$id %>% unique() %>% length() -> n.qualtrics
 
-if (n.all == n.qualtrics) {
-  print(n.all)
-} else {
+if (n.all != n.qualtrics) {
   print("ERROR: Number of participant IDs inconsistent across datasets.")
 }
 ```
-
-
+In this case, *n* = `r n.all`.
 
 # Diagnostics
 
 ## Reliability
 
-Several of the state DVs in the post-test questionnaire were multi-item batteries. While these scales have all been previously validated, we should check the reliability of our measurements nevertheless.
+Several of the state DVs in the post-test questionnaire were multi-item batteries, whose reliability should be verified and reported.
 ```{r reliability, results='asis'}
 list('IMI_Enjoyment'=c("IMI_Enjoyment.1", "IMI_Enjoyment.2", "IMI_Enjoyment.3.R", 
                      "IMI_Enjoyment.4.R", "IMI_Enjoyment.5", "IMI_Enjoyment.6", "IMI_Enjoyment.7"),
@@ -53,7 +50,7 @@ list('IMI_Enjoyment'=c("IMI_Enjoyment.1", "IMI_Enjoyment.2", "IMI_Enjoyment.3.R"
 ```
 
 ## Normality
-We should also check the assumptions of normality for some of the variables of interest. For this, we use the Shapiro-Wilk testto test the hypothesis of normality on each variable. (*Note: This may be subject to issues related to multiple testing. If we want to be very conservative, we could apply a Bonferroni correction.*)
+We should also check the assumptions of normality for some of the variables of interest. For this, we use Shapiro-Wilks to test the hypothesis of normality on each variable. (*Note: This may be subject to issues related to multiple testing. If we want to be very conservative, we could apply a Bonferroni correction.*)
 
 ```{r normality, results='asis'}
 multi_shapiro <- function (var_list, alpha = 0.05) {
@@ -83,7 +80,7 @@ list("IMI_Enjoyment",
   multi_shapiro() %>%
   kable(digits = 3)
 ```
-
+Note that measures of perceived player efficacy and enjoyment are not sufficiently normal in their distributions to meet the assumptions of normality for common statistical tests.
 
 # Univariate Statistics
 

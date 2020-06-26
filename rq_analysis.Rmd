@@ -20,7 +20,7 @@ readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 ### Sexual Orientation
 RQ1a is: *Will viewers whose sexual orientation aligns with the gender of the streamer experience different levels of parasocial interaction (PSI) than others?*
 
-This can be answered looking at self-report data alone, but first we need to determine for each participant whether their sexual orientation aligns with the gender of the streamer (i.e., for a participant who reports that they are interested in women or in all genders and were assigned to the condition with the female streamer).
+This can be answered looking at self-report data alone, but first each participant needs to be recoded in terms of whether their sexual orientation aligns with the gender of the streamer (i.e., for a participant who reports that they are interested in women or in all genders and were assigned to the condition with the female streamer).
 ```{r calc-orientation, results='asis'}
 vgv <- vgv %>% 
   mutate(orientationMatch = ((stimGender == "FEMALE" & orientation == "Women") |
@@ -42,7 +42,7 @@ vgv_unique <- vgv %>%
 vgv_unique %>% freq_kable("orientation")
 vgv_unique %>% freq_kable("orientationMatch")
 ```
-Note that `r vgv_unique %>% filter(is.na(orientation)) %>% count() %>% .[[1]]` participants did not answer the question about sexual orientation and were excluded from subsequent analysis.
+**(Note that `r vgv_unique %>% filter(is.na(orientation)) %>% count() %>% .[[1]]` participants did not answer the question about sexual orientation and were excluded from subsequent analysis.)**
 
 ```{r rq1a}
 rq1a.data <- vgv %>% 
@@ -63,13 +63,12 @@ t.test(PSI_Overall ~ orientationMatch, data = rq1a.data,
        var.equal = TRUE, alternative = "two.sided")
 ```
 
-From these results, it doesn't appear that there is a meaningful difference in 
-parasocial interaction between the two groups of interest.
+It doesn't appear that there is a meaningful statistical difference in parasocial interaction between the two groups of interest.
 
 ### Homophily
 RQ1b is: *Will viewers whose gender identity aligns with the gender of the streamer experience different levels of parasocial interaction (PSI) than others?*
 
-In order to test for possible homophily effects, we need to determine from the self-report data whether the gender expression of the streamer aligns with the identity of the viewer.
+In order to test for possible homophily effects, participants need to be recodedin terms of whether the gender expression of the streamer aligns with the identity of the viewer.
 ```{r calc-homophily}
 vgv <- vgv %>% 
   mutate(identityMatch = ((stimGender == "FEMALE" & gender == "FEMALE") |
@@ -94,8 +93,7 @@ t.test(PSI_Overall ~ identityMatch, data = rq1b.data,
        var.equal = TRUE, alternative = "two.sided")
 ```
 
-From these results, it doesn't appear that there is a meaningful difference in 
-parasocial interaction between the two groups of interest.
+it doesn't appear that there is a meaningful statistical difference inparasocial interaction between the two groups of interest.
 
 ## RQ2: Gender -> Arousal
 ### Sexual Orientation
@@ -108,7 +106,7 @@ rq2a.data <- vgv %>%
   group_by(id) %>% 
   summarise(peakCount = sum(peakCount), 
             peaksPerMin = mean(peaksPerMin),
-            identityMatch = first(orientationMatch)) %>%
+            orientationMatch = first(orientationMatch)) %>%
   filter(!is.na(orientationMatch))
 
 # Visualize the difference between groups using a boxplot
@@ -136,8 +134,7 @@ bartlett.test(peaksPerMin ~ orientationMatch, rq2a.data.no_outliers)
 t.test(peaksPerMin ~ orientationMatch, data = rq2a.data.no_outliers,
        var.equal = TRUE, alternative = "two.sided")
 ```
-From these results, it also doesn't appear that there is a meaningful difference in 
-physiological arousal between the two groups of interest.
+It doesn't appear that there is a meaningful statistical difference in physiological arousal between the two groups of interest.
 
 ### Homophily
 RQ2b is: *Will viewers whose gender identity with the gender of the streamer experience different levels of physiological arousal than others?*
@@ -177,9 +174,7 @@ bartlett.test(peaksPerMin ~ identityMatch, rq2b.data.no_outliers)
 t.test(peaksPerMin ~ identityMatch, data = rq2b.data.no_outliers,
        var.equal = TRUE, alternative = "two.sided")
 ```
-From these results, it also doesn't appear that there is a meaningful difference in 
-physiological arousal between the two groups of interest.
-
+It doesn't appear that there is a meaningful statistical difference in physiological arousal between the two groups of interest.
 
 ## RQ3: Gender -> Attention
 ### Sexual Orientation
@@ -194,7 +189,7 @@ rq3a.data <- vgv %>%
   group_by(id, aoi) %>%
   summarise(totalG = sum(timeSpentG),
             totalF = sum(timeSpentF),
-            identityMatch = first(orientationMatch)) %>%
+            orientationMatch = first(orientationMatch)) %>%
   ungroup() %>%
   arrange(id, aoi) %>%
   mutate(faceRatioG = totalG / (totalG+lead(totalG)),
@@ -224,7 +219,7 @@ t.test(faceRatioG ~ orientationMatch, data = rq3a.data,
 t.test(faceRatioF ~ orientationMatch, data = rq3a.data,
        var.equal = TRUE, alternative = "two.sided")
 ```
-From these results, it appears that there may be a slightly higher allocation of attention to the facecam among participants whose orientation matched the gender of the streamer, but the difference was marginal and did not approach statistical significance.
+It appears that there may be a slightly higher allocation of attention to the facecam among participants whose orientation matched the gender of the streamer, but the difference was marginal and did not approach statistical significance.
 
 ### Homophily
 RQ3b is: *Will viewers whose gender identity aligns with the gender of the streamer allocate their attention differently than others?*
@@ -358,7 +353,7 @@ wilcox.test(faceRatioG ~ player, rq4a.data, alternative = "two.sided", correct =
 wilcox.test(faceRatioG ~ watcher, rq4a.data, alternative = "two.sided", correct = F)
 ```
 
-There is not a clear trend in terms of experienced players or watchers allocating their attention differentially to the facecam. Note, however, that this analysis implicitly excludes those participants in the non-facecam condition. We might also consider whether these factors affect overall attention allocation (i.e., whether people pay attention to the stimulus at all).
+There is not a clear trend in terms of experienced players or watchers allocating their attention differentially to the facecam. However, that this analysis implicitly excludes those participants in the non-facecam condition. It might also be worth considering whether these factors affect overall attention allocation (i.e., whether people pay attention to the stimulus at all).
 
 ```{r rq4b}
 rq4b.data <- vgv %>%
@@ -413,7 +408,6 @@ rq4b.data %>% ggplot(aes(x = logF)) +
 # Remove visual outlier [id = 3694]
 rq4b.data <- rq4b.data %>% filter(id != 3694)
 
-
 rq4b.data %>%
   ggplot(aes(x = hrsPlayingGames, y = logG)) +
     geom_point() +
@@ -439,4 +433,4 @@ wilcox.test(logG ~ player, rq4b.data, alternative = "two.sided", correct = F)
 wilcox.test(logG ~ watcher, rq4b.data, alternative = "two.sided", correct = F)
 ```
 
-From the above, it also doesn't seem that experienced players of video games or watchers of streamed video game content allocate their overall attention significantly differently. (*Note*: Some steps taken above for cleaning and transforming the attention data should be cross-applied elsewhere within the analysis.)
+It doesn't seem that experienced players of video games or watchers of streamed video game content allocate their overall attention significantly differently.
