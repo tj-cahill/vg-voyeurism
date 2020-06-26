@@ -20,13 +20,20 @@ readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 
 # Hypothesis Testing
 ## Hypothesis 1: PSI -> Enjoyment
-H1 is that *viewers with a higher degree of parasocial interaction with the streamer will also experience a higher degree of enjoyment*. This can be assessed through simple bivariate correlation of the self-report measures. (*Note: In this case, we are using Spearman's correlation, because enjoyment is not normally distributed*).
+H1 is that *viewers with a higher degree of parasocial interaction with the streamer will also experience a higher degree of enjoyment*. This can be assessed through simple bivariate correlation of the self-report measures. (*Note: In this case, we are using Spearman's correlation, because enjoyment is not normally distributed* Spearman's rank correlation coefficient makes no assumptions about the distribution of the data, unlike Pearson's product-moment correlation.)
 
 ```{r h1}
 # Display a scatter plot
-ggplot(qualtrics, aes(x=PSI_Overall, y=IMI_Enjoyment)) + geom_point() +
-  geom_smooth(method = lm) +
-  xlab("PSI") + ylab("Enjoyment")
+# ggplot(qualtrics, aes(x=PSI_Overall, y=IMI_Enjoyment)) + geom_point() +
+#  xlab("PSI") + ylab("Enjoyment")
+
+# Display a plot of rank correlation (reflecting Sperman's coefficient)
+qualtrics %>% 
+  transmute(PSI_Overall = rank(PSI_Overall),
+            IMI_Enjoyment = rank(IMI_Enjoyment)) %>%
+  ggplot(aes(x=PSI_Overall, y=IMI_Enjoyment)) + geom_point() +
+    geom_smooth(method=lm, se=F) +
+    xlab("PSI (by rank)") + ylab("Enjoyment (by rank)")
 
 cor.test(~ PSI_Overall + IMI_Enjoyment, qualtrics, alternative = "greater", method="spearman") -> h1.test # One-sided test
 print(h1.test)
