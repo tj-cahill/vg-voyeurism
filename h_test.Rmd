@@ -66,7 +66,7 @@ print(h2.test)
 The hypothesis is **supported**: *t*(`r h2.test$parameter`) = `r h2.test$statistic %>% round(3)`, *p* = `r h2.test$p.value %>% round(3)`. Note that `r h2.data %>% summarise(sum(is.na(PSI_Overall))) %>% .[[1]]` cases that did not complete the PSI questionnaire battery were removed from this analysis.
 
 ## Hypothesis 3: Streamer Gender -> Perceived Efficacy
-H3 is that *the gender of the streamer will affect the perceived efficacy of the streamer*, given identical gameplay performance. This can also be assessed with a Mann-Whitney test (since perceived efficacy is not normally distributed).
+H3 is that *the gender of the streamer will affect the perceived efficacy of the streamer*, given identical gameplay performance. This can also be assessed with a Mann-Whitney test of stochastic equality (since perceived efficacy is not normally distributed).
 
 ```{r h3}
 # First, we need a version of the full dataset with one row per participant, 
@@ -78,14 +78,18 @@ vgv %>% select(id, stimGender, playerEfficacy) %>% unique() -> h3.data
 ggboxplot(h3.data, x = "stimGender", y = "playerEfficacy",
           color = "stimGender", legend = "none",
           xlab = "Streamer Gender", ylab = "Perceived Efficacy")
-  
+
+# It appears that there are some outliers on the low end of perceived efficacy 
+# in both groups; these should be removed before running tests
+h3.outliers <- boxplot(playerEfficacy ~ stimGender, data = h3.data, plot=F)$out
+h3.data <- h3.data[-which(h3.data$playerEfficacy %in% h3.outliers),]
 
 wilcox.test(playerEfficacy ~ stimGender, h3.data, 
-       alternative = "two.sided") -> h3.test # Two-sided test
+       alternative = "two.sided", correct=F) -> h3.test # Two-sided test
 print(h3.test)
 ```
 
-The hypothesis is **not supported**: *W* = `r h3.test$statistic %>% round(3)`, *p* = `r h3.test$p.value %>% round(3)`
+The hypothesis is **not supported**: *U* = `r h3.test$statistic %>% round(3)`, *p* = `r h3.test$p.value %>% round(3)`. Note that `r length(h3.outliers)` outliers were removed from the analysis.
 
 ### Experience Control
 There's a possibility that audience's perception of player skill is moderated by their own experience playing games.
