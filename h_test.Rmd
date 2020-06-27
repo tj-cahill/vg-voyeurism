@@ -13,6 +13,7 @@ library(knitr)
 library(ggplot2)
 library(ggpubr)
 library(car)
+library(rstatix)
 readRDS(file = "data/merged_all.rds") -> vgv
 readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 ```
@@ -91,8 +92,8 @@ print(h3.test)
 
 The hypothesis is **not supported**: *U* = `r h3.test$statistic %>% round(3)`, *p* = `r h3.test$p.value %>% round(3)`. Note that `r length(h3.outliers)` outliers were removed from the analysis.
 
-### Experience Control
-There's a possibility that audience's perception of player skill is moderated by their own experience playing games.
+### Control for Experience
+Another possibility is that audience's perception of player skill is moderated by their own experience playing games. The following analysis investigates the hypothesized relationship from H3 while controlling for experience *playing games* and for experience *watching video game content online*.
 
 ```{r h3b}
 # In this case, we want a version of the dataset that includes the previous 
@@ -134,20 +135,54 @@ h3b.data %>% ggplot(aes(x=x)) +
   geom_histogram(aes(x = hrsWatchingVGContent), fill = "#404080", alpha = 0.4, binwidth = 5) +
   geom_label(aes(x = 75, y = 25, label = "Hrs Watching Games"), color = "#404080")
 
-# Confirm homogeneity of variance by group
-leveneTest(playerEfficacy ~ stimGender, h3b.data)
+# Remove outliers 
+h3b.data %>% filter(hrsPlayingGames < 8*7 & hrsWatchingVGContent < 8*7) -> h3b.data
+# h3b.play_outliers <- boxplot(h3b.data$hrsPlayingGames, plot=F)$out
+# h3b.watch_outliers <- boxplot(h3b.data$hrsWatchingVGContent, plot=F)$out
+# h3b.data <- h3b.data[-which(h3b.data$hrsPlayingGames %in% h3b.play_outliers),]
+#h3b.data <- h3b.data[-which(h3b.data$hrsWatchingVGContent %in% h3b.watch_outliers),]
 
-# Remove outliers (defined as those who report spending more than 12 hours per day
-# on average either watching or playing games)
-h3b.data %>% filter(hrsPlayingGames < 12*7 & hrsWatchingVGContent < 12*7) -> h3b.data
+# Evaluate correlation between potential confounders (two measures of experience)
+# and the outcome variable (player efficacy)
+cor.test(~ playerEfficacy + hrsPlayingGames, h3b.data)
+cor.test(~ playerEfficacy + hrsWatchingVGContent, h3b.data)
 
-h3b.model <- aov(playerEfficacy ~ hrsPlayingGames + hrsWatchingVGContent + stimGender, h3b.data)
+# Only times spent watching VG content online seems to correlate with perceived
+# player efficacy, so this should be included in the model as a covariate
 
+ggscatter(h3b.data, x = "hrsWatchingVGContent", y = "playerEfficacy",
+          color = "stimGender", add = "reg.line")
+
+# Check the assumption of homogeneity of regression slopes
+h3b.data %>% anova_test(playerEfficacy ~ stimGender*hrsWatchingVGContent)
+
+# Check the assumption of normality of residuals
+h3b.model <- lm(playerEfficacy ~ hrsWatchingVGContent + stimGender, h3b.data)
+h3b.model.metrics <- augment(h3b.model) %>% 
+  select(-.hat, -.sigma, -.fitted, -.se.fit)
+shapiro_test(h3b.model.metrics$.resid)
+
+# It appears that there are more outliers as identified using the standardized 
+# residual -- these outliers seem to occur when both the outcome and the 
+# covariate are equal to 0
+h3b.model.metrics %>% filter(abs(.std.resid) > 3) %>% as.data.frame()
+h3b.data <- h3b.data %>%filter(!(playerEfficacy == 0 & hrsWatchingVGContent == 0))
+
+# Refit the model
+h3b.model <- lm(playerEfficacy ~ hrsWatchingVGContent + stimGender, h3b.data)
+h3b.model.metrics <- augment(h3b.model) %>% 
+  select(-.hat, -.sigma, -.fitted, -.se.fit)
+
+# Confirm homogeneity of variance of residuals
+bartlett.test(.resid ~ stimGender, h3b.model.metrics)
+
+# Fit and display ANCOVA model
+h3b.model <- aov(playerEfficacy ~ hrsWatchingVGContent + stimGender, h3b.data)
 Anova(h3b.model, type = "III")
 ```
-Visualization suggests that most respondents don't play games, but do watch some, and that there are a small number of extreme outliers in terms of both playing and watching (i.e., the figures are right-skewed).
+Visualization suggests that most respondents don't play games, but do watch some, and that there are a small number of extreme outliers in terms of both playing and watching (i.e., the figures are right-skewed). These outliers (*n* = `r nrow(qualtrics) - nrow(h3b.data)`) have been removed from the ANCOVA.
 
-The ANCOVA model suggests that while there are still not significant differences in perceived player efficacy as a result of the streamer's gender, there is **significant covariance** between experience watching streamed video game content and the perceived efficacy of the streamer.
+The ANCOVA model suggests that while there are still not significant differences in perceived player efficacy as a result of the streamer's gender, even when controlling for the potential confounding factor of experience.
 
 ```{r h3b_p2}
 # Also check if there's a significant difference between players and non-players,
@@ -230,7 +265,6 @@ cor.test(~ PSI_Overall + faceRatioF, h4.data,
          alternative = "greater") -> h4.test.f
 print(h4.test.f)
 ```
-
 The hypothesis is **not supported** for gaze measurement: *&rho;* = `r h4.test.g$estimate %>% round(3)`, *p* = `r h4.test.g$p.value %>% round(3)`.
 
 The hypothesis is **not supported** for fixation measurement: *&rho;* = `r h4.test.f$estimate %>% round(3)`, *p* = `r h4.test.f$p.value %>% round(3)`.
