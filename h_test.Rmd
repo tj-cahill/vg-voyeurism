@@ -63,7 +63,7 @@ t.test(PSI_Overall ~ stimFace, h2.data, var.equal = h2.var_equal,
 print(h2.test)
 ```
 
-The hypothesis is **supported**: *t*(`r h2.test$parameter`) = `r h2.test$statistic %>% round(3)`, *p* = `r h2.test$p.value %>% round(3)`.
+The hypothesis is **supported**: *t*(`r h2.test$parameter`) = `r h2.test$statistic %>% round(3)`, *p* = `r h2.test$p.value %>% round(3)`. Note that `r h2.data %>% summarise(sum(is.na(PSI_Overall))) %>% .[[1]]` cases that did not complete the PSI questionnaire battery were removed from this analysis.
 
 ## Hypothesis 3: Streamer Gender -> Perceived Efficacy
 H3 is that *the gender of the streamer will affect the perceived efficacy of the streamer*, given identical gameplay performance. This can also be assessed with a Mann-Whitney test (since perceived efficacy is not normally distributed).
