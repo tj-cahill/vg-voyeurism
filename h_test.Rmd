@@ -109,7 +109,16 @@ vgv %>% select(id, stimGender, playerEfficacy,
                hrsPlayingMultiPlayer_weekend) %>% unique() -> h3b.data
 
 # Recode non-responses as zero hours
-h3b.data[is.na(h3b.data)] = 0
+# h3b.data[is.na(h3b.data)] <- 0
+h3b.data %>% replace_na(list(hrsWatchingRecordedVGContent_weekday = 0,
+                             hrsWatchingRecordedVGContent_weekday = 0,
+                             hrsWatchingRecordedVGContent_weekend = 0,
+                             hrsWatchingStreamedVGContent_weekday = 0,
+                             hrsWatchingStreamedVGContent_weekend = 0,
+                             hrsPlayingSinglePlayer_weekday = 0,
+                             hrsPlayingSinglePlayer_weekend = 0,
+                             hrsPlayingMultiPlayer_weekday = 0,
+                             hrsPlayingMultiPlayer_weekend = 0)) -> h3b.data
 
 # We can combine some of these measures together--since this level of granularity
 # probably isn't particularly helpful--to get aggregate levels of gameplay
@@ -147,71 +156,89 @@ h3b.data %>% filter(hrsPlayingGames < 8*7 & hrsWatchingVGContent < 8*7) -> h3b.d
 cor.test(~ playerEfficacy + hrsPlayingGames, h3b.data)
 cor.test(~ playerEfficacy + hrsWatchingVGContent, h3b.data)
 
-# Only times spent watching VG content online seems to correlate with perceived
+# Only times spent playing video games seems to correlate with perceived
 # player efficacy, so this should be included in the model as a covariate
 
-ggscatter(h3b.data, x = "hrsWatchingVGContent", y = "playerEfficacy",
+ggscatter(h3b.data, x = "hrsPlayingGames", y = "playerEfficacy",
           color = "stimGender", add = "reg.line")
 
 # Check the assumption of homogeneity of regression slopes
-h3b.data %>% anova_test(playerEfficacy ~ stimGender*hrsWatchingVGContent)
+h3b.data %>% anova_test(playerEfficacy ~ stimGender*hrsPlayingGames)
 
 # Check the assumption of normality of residuals
-h3b.model <- lm(playerEfficacy ~ hrsWatchingVGContent + stimGender, h3b.data)
+h3b.model <- lm(playerEfficacy ~ hrsPlayingGames + stimGender, h3b.data)
 h3b.model.metrics <- augment(h3b.model) %>% 
   select(-.hat, -.sigma, -.fitted, -.se.fit)
 shapiro_test(h3b.model.metrics$.resid)
 
-# It appears that there are more outliers as identified using the standardized 
-# residual -- these outliers seem to occur when both the outcome and the 
-# covariate are equal to 0
-h3b.model.metrics %>% filter(abs(.std.resid) > 3) %>% as.data.frame()
-h3b.data <- h3b.data %>%filter(!(playerEfficacy == 0 & hrsWatchingVGContent == 0))
+# It appears that there is one more outlier as identified using the standardized 
+# residual
+h3b.model.metrics %>% 
+  filter(abs(.std.resid) > 3) %>% as.data.frame() -> h3b.model.outliers
+print(h3b.model.outliers)
 
-# Refit the model
-h3b.model <- lm(playerEfficacy ~ hrsWatchingVGContent + stimGender, h3b.data)
+# Refit the model and check for additional outliers
+h3b.model <- lm(playerEfficacy ~ hrsPlayingGames + stimGender, h3b.data, 
+                subset = -as.numeric(h3b.model.outliers$.rownames))
 h3b.model.metrics <- augment(h3b.model) %>% 
   select(-.hat, -.sigma, -.fitted, -.se.fit)
+h3b.model.metrics %>% 
+  filter(abs(.std.resid) > 3) %>% as.data.frame() %>% 
+  rbind(h3b.model.outliers, .) -> h3b.model.outliers
+print(h3b.model.outliers)
+
+
+# Refit the model and check for outliers
+h3b.model <- lm(playerEfficacy ~ hrsPlayingGames + stimGender, h3b.data,
+                subset = -as.numeric(h3b.model.outliers$.rownames))
+h3b.model.metrics <- augment(h3b.model) %>% 
+  select(-.hat, -.sigma, -.fitted, -.se.fit)
+h3b.model.metrics %>% 
+  filter(abs(.std.resid) > 3) %>% as.data.frame() %>% 
+  rbind(h3b.model.outliers, .) -> h3b.model.outliers
+print(h3b.model.outliers)
+
+# Recheck assumptions of linearity, homogeneity & normality
+h3b.data[-as.numeric(h3b.model.outliers$.rownames),] %>%
+  ggscatter(x = "hrsPlayingGames", y = "playerEfficacy",
+          color = "stimGender", add = "reg.line")
+h3b.data[-as.numeric(h3b.model.outliers$.rownames),]  %>% anova_test(playerEfficacy ~ stimGender*hrsPlayingGames)
+shapiro_test(h3b.model.metrics$.resid)
 
 # Confirm homogeneity of variance of residuals
 bartlett.test(.resid ~ stimGender, h3b.model.metrics)
 
-# Fit and display ANCOVA model
-h3b.model <- aov(playerEfficacy ~ hrsWatchingVGContent + stimGender, h3b.data)
+# Display ANOVA table
 Anova(h3b.model, type = "III")
 ```
 Visualization suggests that most respondents don't play games, but do watch some, and that there are a small number of extreme outliers in terms of both playing and watching (i.e., the figures are right-skewed). These outliers (*n* = `r nrow(qualtrics) - nrow(h3b.data)`) have been removed from the ANCOVA.
 
 The ANCOVA model suggests that while there are still not significant differences in perceived player efficacy as a result of the streamer's gender, even when controlling for the potential confounding factor of experience.
 
-```{r h3b_p2}
+```{r h3c}
 # Also check if there's a significant difference between players and non-players,
 # watchers and non-watchers
-h3b.data %>% mutate(player = hrsPlayingGames > 0,
-                    watcher = hrsWatchingVGContent > 0) -> h3b.data
+h3c.data <- h3b.data %>%
+  mutate(player = hrsPlayingGames > 0,
+         watcher = hrsWatchingVGContent > 0)
 
-wilcox.test(playerEfficacy ~ player, h3b.data, 
+wilcox.test(playerEfficacy ~ player, h3c.data, 
        alternative = "two.sided", correct = FALSE)
 
-wilcox.test(playerEfficacy ~ watcher, h3b.data,
+wilcox.test(playerEfficacy ~ watcher, h3c.data,
             alternative = "two.sided", correct = FALSE)
 ```
 
-While the hypothesis is **not supported**, this seems to suggest that time spent
-watching VG content is more influential in determining perceived efficacy than either
-gender or play experience.
-
-```{r h3_exp}
-h3_exp.model <- lm(playerEfficacy ~ hrsWatchingVGContent, h3b.data)
-summary(h3_exp.model)
-
-# This model has some issues -- come back and respecify
+```{r h3d}
+h3d.model <- lm(playerEfficacy ~ hrsPlayingGames, h3b.data,
+                   subset = -as.numeric(h3b.model.outliers$.rownames))
+summary(h3d.model)
 par(mfrow = c(2, 2))
-plot(h3_exp.model)
+plot(h3d.model)
 
-h3b.data %>% ggscatter(x="hrsWatchingVGContent", y = "playerEfficacy", color="stimGender") + stat_smooth(method = "lm")
+h3b.data[-as.numeric(h3b.model.outliers$.rownames),] %>% ggscatter(x="hrsPlayingGames", y = "playerEfficacy", color="stimGender") + stat_smooth(method = "lm")
 ```
-Interestingly, this suggests a small yet significant positive effect of past viewership on the perceived efficacy of the streamer.
+A respecification of the model to focus entirely on the main effect of experience playing games shows a minor, yet significant negative effect of past experience on perceived player efficacy (*b* = `r summary(h3d.model)$coefficients[2,1] %>% round(3)`,  *p* = `r summary(h3d.model)$coefficients[2,4] %>% round(3)`,  *R^2* = `r summary(h3d.model)$r.squared %>% round(3)`).
 
 ## Hypothesis 4: Attention -> Parasocial Interaction
 H4 is that *viewers who allocate more attention to the streamer's face (where the facecam is displayed) will experience a proportionately greater level of parasocial interaction*.
