@@ -241,7 +241,7 @@ h3b.data[-as.numeric(h3b.model.outliers$.rownames),] %>% ggscatter(x="hrsPlaying
 A respecification of the model to focus entirely on the main effect of experience playing games shows a minor, yet significant negative effect of past experience on perceived player efficacy (*b* = `r summary(h3d.model)$coefficients[2,1] %>% round(3)`,  *p* = `r summary(h3d.model)$coefficients[2,4] %>% round(3)`,  *R^2* = `r summary(h3d.model)$r.squared %>% round(3)`).
 
 ## Hypothesis 4: Attention -> Parasocial Interaction
-H4 is that *viewers who allocate more attention to the streamer's face (where the facecam is displayed) will experience a proportionately greater level of parasocial interaction*.
+H4 is that *viewers who allocate more attention to the streamer's face (where the facecam is displayed) relative to the rest of the stimulus will experience a proportionately greater level of parasocial interaction*.
 ```{r h4}
 # First, create a version of the dataset with one row per participant, 
 # containing their self-reported level of PSI, as well as an aggregate
@@ -280,21 +280,41 @@ ggplot(h4.data, aes(x=faceRatioF, y=PSI_Overall)) + geom_point() +
   geom_smooth(method = lm) +
   xlab("Ratio of Fixation on Facecam") + ylab("PSI")
 
-# Test the correlation for gaze using Spearman because gaze ratio
+# Check for outliers (again using the standard residual of the linear model)
+h4g.model <- lm(PSI_Overall ~ faceRatioG, h4.data)
+h4g.model.metrics <- augment(h4g.model) %>% 
+  select(-.hat, -.sigma, -.fitted, -.se.fit)
+
+h4g.model.metrics %>% 
+  filter(abs(.std.resid) > 3) %>% as.data.frame() 
+
+h4f.model <- lm(PSI_Overall ~ faceRatioF, h4.data)
+h4f.model.metrics <- augment(h4f.model) %>% 
+  select(-.hat, -.sigma, -.fitted, -.se.fit)
+
+h4f.model.metrics %>% 
+  filter(abs(.std.resid) > 3) %>% as.data.frame() 
+
+# Test for the normality of the RET ratios
+shapiro.test(h4.data$faceRatioG)
+shapiro.test(h4.data$faceRatioF)
+shapiro.test(h4.data$faceRatioF)
+
+# Test the correlation for gaze using Spearman (because gaze ratio
 # isn't normally distributed)
 cor.test(~ PSI_Overall + faceRatioG, h4.data,
          alternative = "greater",
          method="spearman") -> h4.test.g
 print(h4.test.g)
 
-# Test the correlation for fixation (
+# Test the correlation for fixation
 cor.test(~ PSI_Overall + faceRatioF, h4.data,
          alternative = "greater") -> h4.test.f
 print(h4.test.f)
 ```
 The hypothesis is **not supported** for gaze measurement: *&rho;* = `r h4.test.g$estimate %>% round(3)`, *p* = `r h4.test.g$p.value %>% round(3)`.
 
-The hypothesis is **not supported** for fixation measurement: *&rho;* = `r h4.test.f$estimate %>% round(3)`, *p* = `r h4.test.f$p.value %>% round(3)`.
+The hypothesis is **not supported** for fixation measurement: *r* = `r h4.test.f$estimate %>% round(3)`, *p* = `r h4.test.f$p.value %>% round(3)`.
 
 
 ## Hypothesis 5: Attention -> Arousal
