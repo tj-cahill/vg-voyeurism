@@ -390,20 +390,20 @@ vgv %>% filter(aoi == "GAME") %>%
 
 # There are a few outliers in the biometric data, so use the simple 2*IQR rule 
 # to filter them out.
-h6.data.no_outliers <- h6.data %>% 
+h6.data.inrange <- h6.data %>% 
   filter(peaksPerMin < median(h6.data$peaksPerMin, na.rm=T) +
            2*IQR(h6.data$peaksPerMin, na.rm=T)) %>%
   filter(peaksPerMin > median(h6.data$peaksPerMin, na.rm=T) -
            2*IQR(h6.data$peaksPerMin, na.rm=T))
 
 # Generate a scatter plot 
-ggplot(h6.data.no_outliers, aes(x=peaksPerMin, y=IMI_Enjoyment)) + geom_point() +
-  geom_smooth(method = lm) +
-  xlab("Arousal") + ylab("Enjoyment")
+ggplot(h6.data.inrange, aes(x=rank(peaksPerMin), y=rank(IMI_Enjoyment))) + geom_point() +
+  geom_smooth(method = lm, se=F) +
+  xlab("Arousal (by Rank)") + ylab("Enjoyment (by Rank)")
 
 # Test the correlation (using Spearman again, since the variables are not
 # normally distributed)
-cor.test(~ IMI_Enjoyment + peaksPerMin, h6.data.no_outliers, 
+cor.test(~ IMI_Enjoyment + peaksPerMin, h6.data.inrange, 
          alternative = "greater",
          method="spearman") -> h6.test
 print(h6.test)
