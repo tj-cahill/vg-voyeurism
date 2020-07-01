@@ -58,6 +58,10 @@ ggboxplot(rq1a.data, x = "orientationMatch", y = "PSI_Overall",
 # First test for homogeneity of variance
 bartlett.test(PSI_Overall ~ orientationMatch, rq1a.data)
 
+# Check for near-normality of distributions in the reduced dataset
+ggqqplot(rq1a.data$PSI_Overall)
+shapiro.test(rq1a.data$PSI_Overall)
+
 # Run a t-test
 t.test(PSI_Overall ~ orientationMatch, data = rq1a.data,
        var.equal = TRUE, alternative = "two.sided")
