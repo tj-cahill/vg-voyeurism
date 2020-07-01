@@ -270,10 +270,10 @@ vgv %>%
   filter(aoi == "FACE") %>%
   select(-aoi, -totalG, -totalF) -> h4.data
 
-# Generate a scatter plot for gaze ratio
-ggplot(h4.data, aes(x=faceRatioG, y=PSI_Overall)) + geom_point() +
-  geom_smooth(method = lm) +
-  xlab("Ratio of Gaze on Facecam") + ylab("PSI")
+# Generate a scatter plot for gaze ratio (using rank to approximate Spearman's correlation)
+ggplot(h4.data, aes(x=rank(faceRatioG), y=rank(PSI_Overall))) + geom_point() +
+  geom_smooth(method = lm, se = F) +
+  xlab("Ratio of Gaze on Facecam (by Rank)") + ylab("PSI (by Rank)")
 
 # Generate a scatter plot for fixation ratio
 ggplot(h4.data, aes(x=faceRatioF, y=PSI_Overall)) + geom_point() +
@@ -341,31 +341,31 @@ vgv %>%
 
 # There are a few outliers in the arousal data, so use the simple 2*IQR rule 
 # to filter them out.
-h5.data.no_outliers <- h5.data %>% 
+h5.data.inrange <- h5.data %>% 
   filter(peaksPerMin < median(h5.data$peaksPerMin, na.rm=T) + 2*IQR(h5.data$peaksPerMin, na.rm=T)) %>%
   filter(peaksPerMin > median(h5.data$peaksPerMin, na.rm=T) -
            2*IQR(h5.data$peaksPerMin, na.rm=T))
 
-# Generate a scatter plot for gaze ratio
-ggplot(h5.data.no_outliers, aes(x=faceRatioG, y=peaksPerMin)) + geom_point() +
-  geom_smooth(method = lm) +
-  xlab("Ratio of Gaze on Facecam") + ylab("Arousal")
+# Generate a scatter plot for gaze ratio (using rank to approximate Spearman's correlation)
+ggplot(h5.data.inrange, aes(x=rank(faceRatioG), y=rank(peaksPerMin))) + geom_point() +
+  geom_smooth(method = lm, se=F) +
+  xlab("Ratio of Gaze on Facecam (by rank)") + ylab("Arousal (by rank)")
 
 # Generate a scatter plot for fixation ratio
-ggplot(h5.data.no_outliers, aes(x=faceRatioF, y=peaksPerMin)) + geom_point() +
-  geom_smooth(method = lm) +
-  xlab("Ratio of Fixation on Facecam") + ylab("Arousal")
+ggplot(h5.data.inrange, aes(x=rank(faceRatioF), y=rank(peaksPerMin))) + geom_point() +
+  geom_smooth(method = lm, se=F) +
+  xlab("Ratio of Fixation on Facecam (by rank)") + ylab("Arousal (by rank)")
 
 # Test the correlation for gaze (using Spearman because gaze ratio
 # isn't normally distributed)
-cor.test(~ peaksPerMin + faceRatioG, h5.data.no_outliers,
+cor.test(~ peaksPerMin + faceRatioG, h5.data.inrange,
          alternative = "greater",
          method="spearman") -> h5.test.g
 print(h5.test.g)
 
 # Test the correlation for fixation (using Spearman because GSR data isn't
 # normally distributed)
-cor.test(~ peaksPerMin + faceRatioF, h5.data.no_outliers,
+cor.test(~ peaksPerMin + faceRatioF, h5.data.inrange,
          alternative = "greater",
          method="spearman") -> h5.test.f
 print(h5.test.f)
