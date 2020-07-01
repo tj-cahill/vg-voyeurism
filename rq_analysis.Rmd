@@ -169,25 +169,31 @@ ggboxplot(rq2b.data, x = "identityMatch", y = "peaksPerMin",
           xlab = "Homophily", ylab = "GSR",
           color = "identityMatch", legend = "none")
 
-# There are a few outliers in the biometric data, so use the simple 2*IQR rule 
-# to filter them out.
-rq2b.data.no_outliers <- rq2b.data %>% 
-  filter(peaksPerMin < median(rq2b.data$peaksPerMin, na.rm=T) +
-           2*IQR(rq2b.data$peaksPerMin, na.rm=T)) %>%
-  filter(peaksPerMin > median(rq2b.data$peaksPerMin, na.rm=T) -
-           2*IQR(rq2b.data$peaksPerMin, na.rm=T))
+# There are outliers visible in the boxplot that will distort the analysis, so
+# remove them
+rq2b.data.outliers <- boxplot(peaksPerMin ~ identityMatch, data = rq2b.data, plot=F)$out
+rq2b.data.inrange <- rq2b.data[-which(rq2b.data$peaksPerMin %in% rq2b.data.outliers),]
 
 # Visualize again
-ggboxplot(rq2b.data.no_outliers, x = "identityMatch", y = "peaksPerMin",
+ggboxplot(rq2b.data.inrange, x = "identityMatch", y = "peaksPerMin",
           xlab = "Homophily", ylab = "GSR",
           color = "identityMatch", legend = "none")
 
 # Now test for homogeneity of variance
-bartlett.test(peaksPerMin ~ identityMatch, rq2b.data.no_outliers)
+bartlett.test(peaksPerMin ~ identityMatch, rq2b.data.inrange)
+
+# Check for near-normality of distributions in the reduced dataset
+ggqqplot(rq2b.data.inrange$peaksPerMin)
+shapiro.test(rq2b.data.inrange$peaksPerMin)
 
 # Run a t-test
-t.test(peaksPerMin ~ identityMatch, data = rq2b.data.no_outliers,
-       var.equal = TRUE, alternative = "two.sided")
+# t.test(peaksPerMin ~ identityMatch, data = rq2b.data.no_outliers,
+#        var.equal = TRUE, alternative = "two.sided")
+
+# Since GSR isn't distributed normally in the reduced dataset, we will use a 
+# Mann-Whitney U test in place of a t-test
+wilcox.test(peaksPerMin ~ identityMatch, data = rq2b.data.inrange,
+            alternative = "two.sided", correct = FALSE)
 ```
 It doesn't appear that there is a meaningful statistical difference in physiological arousal between the two groups of interest.
 
