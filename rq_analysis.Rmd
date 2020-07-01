@@ -72,11 +72,15 @@ It doesn't appear that there is a meaningful statistical difference in parasocia
 ### Homophily
 RQ1b is: *Will viewers whose gender identity aligns with the gender of the streamer experience different levels of parasocial interaction (PSI) than others?*
 
-In order to test for possible homophily effects, participants need to be recodedin terms of whether the gender expression of the streamer aligns with the identity of the viewer.
-```{r calc-homophily}
+In order to test for possible homophily effects, participants need to be recoded in terms of whether the gender expression of the streamer aligns with the identity of the viewer.
+```{r calc-homophily, results="asis"}
 vgv <- vgv %>% 
   mutate(identityMatch = ((stimGender == "FEMALE" & gender == "FEMALE") |
                              (stimGender == "MALE" & gender == "MALE")))
+vgv %>%
+  select(id, identityMatch) %>%
+  unique() %>%
+  freq_kable("identityMatch")
 ```
 
 ```{r rq1b}
@@ -97,7 +101,7 @@ t.test(PSI_Overall ~ identityMatch, data = rq1b.data,
        var.equal = TRUE, alternative = "two.sided")
 ```
 
-it doesn't appear that there is a meaningful statistical difference inparasocial interaction between the two groups of interest.
+it doesn't appear that there is a meaningful statistical difference in parasocial interaction between the two groups of interest.
 
 ## RQ2: Gender -> Arousal
 ### Sexual Orientation
