@@ -101,7 +101,7 @@ t.test(PSI_Overall ~ identityMatch, data = rq1b.data,
        var.equal = TRUE, alternative = "two.sided")
 ```
 
-it doesn't appear that there is a meaningful statistical difference in parasocial interaction between the two groups of interest.
+It doesn't appear that there is a meaningful statistical difference in parasocial interaction between the two groups of interest.
 
 ## RQ2: Gender -> Arousal
 ### Sexual Orientation
@@ -122,25 +122,32 @@ ggboxplot(rq2a.data, x = "orientationMatch", y = "peaksPerMin",
           xlab = "Orientation Match", ylab = "GSR",
           color = "orientationMatch", legend = "none")
 
-# There are a few outliers in the biometric data, so use the simple 2*IQR rule 
-# to filter them out.
-rq2a.data.no_outliers <- rq2a.data %>% 
-  filter(peaksPerMin < median(rq2a.data$peaksPerMin, na.rm=T) +
-           2*IQR(rq2a.data$peaksPerMin, na.rm=T)) %>%
-  filter(peaksPerMin > median(rq2a.data$peaksPerMin, na.rm=T) -
-           2*IQR(rq2a.data$peaksPerMin, na.rm=T))
+# There are outliers visible in the boxplot that will distort the analysis, so
+# remove them
+rq2a.data.outliers <- boxplot(peaksPerMin ~ orientationMatch, data = rq2a.data, plot=F)$out
+rq2a.data.inrange <- rq2a.data[-which(rq2a.data$peaksPerMin %in% rq2a.data.outliers),]
 
 # Visualize again
-ggboxplot(rq2a.data.no_outliers, x = "orientationMatch", y = "peaksPerMin",
+ggboxplot(rq2a.data.inrange, x = "orientationMatch", y = "peaksPerMin",
           xlab = "Orientation Match", ylab = "GSR",
           color = "orientationMatch", legend = "none")
 
 # Now test for homogeneity of variance
-bartlett.test(peaksPerMin ~ orientationMatch, rq2a.data.no_outliers)
+bartlett.test(peaksPerMin ~ orientationMatch, rq2a.data.inrange)
+
+# Check for near-normality of distributions in the reduced dataset
+ggqqplot(rq2a.data.inrange$peaksPerMin)
+shapiro.test(rq2a.data.inrange$peaksPerMin)
 
 # Run a t-test
-t.test(peaksPerMin ~ orientationMatch, data = rq2a.data.no_outliers,
-       var.equal = TRUE, alternative = "two.sided")
+# t.test(peaksPerMin ~ orientationMatch, data = rq2a.data.no_outliers,
+#        var.equal = TRUE, alternative = "two.sided")
+
+# Since GSR isn't distributed normally in the reduced dataset, we will use a 
+# Mann-Whitney U test in place of a t-test
+
+wilcox.test(peaksPerMin ~ orientationMatch, data = rq2a.data.inrange,
+            alternative = "two.sided", correct = FALSE)
 ```
 It doesn't appear that there is a meaningful statistical difference in physiological arousal between the two groups of interest.
 
