@@ -11,6 +11,8 @@ library(dplyr)
 library(knitr)
 library(ggplot2)
 library(ggpubr)
+library(tidyr)
+library(broom)
 readRDS(file = "data/merged_all.rds") -> vgv
 readRDS(file = "data/Qualtrics_merged.rds") -> qualtrics
 ```
@@ -319,93 +321,188 @@ As above, it appears that the difference in attention allocation based on homoph
 ## RQ4: Experience -> Attention
 RQ4 is: *Do viewers with high levels of experience playing video games allocate their attention differently than inexperienced players when watching a livestream?*
 
-```{r rq4a}
+```{r rq4a.1}
 # First, create a version of the dataset with one row per participant, 
 # containing aggregate measures of their relative attention allocation to the
 # facecam (thus containing participants in the facecam condition only)
 
-rq4a.data <- vgv %>%
-  filter(stimFace == TRUE) %>%
-  mutate(hrsWatchingVGContent = hrsWatchingRecordedVGContent_weekday * 5 + 
+
+vgv %>% select(id, stimGender, stimFace, timeSpentG, timeSpentF, aoi, 
+               hrsWatchingRecordedVGContent_weekday,
+               hrsWatchingRecordedVGContent_weekend,
+               hrsWatchingStreamedVGContent_weekday,
+               hrsWatchingStreamedVGContent_weekend,
+               hrsPlayingSinglePlayer_weekday,
+               hrsPlayingSinglePlayer_weekend,
+               hrsPlayingMultiPlayer_weekday,
+               hrsPlayingMultiPlayer_weekend) %>% unique() %>%
+               replace_na(list(hrsWatchingRecordedVGContent_weekday = 0,  # Respondents who did not report watching or playing games count as 0 hours
+                             hrsWatchingRecordedVGContent_weekday = 0,
+                             hrsWatchingRecordedVGContent_weekend = 0,
+                             hrsWatchingStreamedVGContent_weekday = 0,
+                             hrsWatchingStreamedVGContent_weekend = 0,
+                             hrsPlayingSinglePlayer_weekday = 0,
+                             hrsPlayingSinglePlayer_weekend = 0,
+                             hrsPlayingMultiPlayer_weekday = 0,
+                             hrsPlayingMultiPlayer_weekend = 0)) %>%
+      filter(stimFace == TRUE) %>%
+      mutate(hrsWatchingVGContent = hrsWatchingRecordedVGContent_weekday * 5 + 
                                 hrsWatchingRecordedVGContent_weekend * 2 +
                                 hrsWatchingStreamedVGContent_weekday * 5 +
                                 hrsWatchingStreamedVGContent_weekend * 2,
-         hrsPlayingGames = hrsPlayingSinglePlayer_weekday * 5 +
+             hrsPlayingGames = hrsPlayingSinglePlayer_weekday * 5 +
                            hrsPlayingSinglePlayer_weekend * 2 +
                            hrsPlayingMultiPlayer_weekday * 5 +
                            hrsPlayingMultiPlayer_weekend * 2) %>%
-  group_by(id, aoi) %>%
-  summarise(totalG = sum(timeSpentG),
-            totalF = sum(timeSpentF),
-            hrsWatchingVGContent = first(hrsWatchingVGContent),
-            hrsPlayingGames = first(hrsPlayingGames)) %>%
-  ungroup() %>%
-  arrange(id, aoi) %>%
-  mutate(faceRatioG = totalG / (totalG+lead(totalG)),
-         faceRatioF = totalF / (totalF+lead(totalF))) %>%
-  filter(aoi == "FACE") %>%
-  select(-aoi, -totalG, -totalF)
+      group_by(id, aoi) %>%
+      summarise(totalG = sum(timeSpentG),
+                totalF = sum(timeSpentF),
+                hrsWatchingVGContent = first(hrsWatchingVGContent),
+                hrsPlayingGames = first(hrsPlayingGames)) %>%
+      ungroup() %>%
+      arrange(id, aoi) %>%
+      mutate(faceRatioG = totalG / (totalG+lead(totalG)),
+             faceRatioF = totalF / (totalF+lead(totalF))) %>%
+      filter(aoi == "FACE") %>%
+      select(-aoi, -totalG, -totalF)
 
 # Respondents who did not report watching or playing games count as 0 hours
-rq4a.data[is.na(rq4a.data$hrsPlayingGames),]$hrsPlayingGames <- 0
-rq4a.data[is.na(rq4a.data$hrsWatchingVGContent),]$hrsWatchingVGContent <- 0
+# rq4a.data[is.na(rq4a.data$hrsPlayingGames),]$hrsPlayingGames <- 0
+# rq4a.data[is.na(rq4a.data$hrsWatchingVGContent),]$hrsWatchingVGContent <- 0
 
-# Remove outliers (those who report more than 12 hours a day)
-rq4a.data %>% filter(hrsPlayingGames < 12*7 & hrsWatchingVGContent < 12*7) -> rq4a.data
+# Let's visualize the results
+rq4a.data %>% ggplot(aes(x=x)) +
+  geom_histogram(aes(x = hrsPlayingGames), fill = "#69b3a2", alpha = 0.4, binwidth = 5) +
+  geom_label(aes(x = 75, y = 35, label = "Hrs Playing Games"), color = "#69b3a2") +
+  geom_histogram(aes(x = hrsWatchingVGContent), fill = "#404080", alpha = 0.4, binwidth = 5) +
+  geom_label(aes(x = 75, y = 25, label = "Hrs Watching Games"), color = "#404080")
 
-rq4a.data %>%
-  ggplot(aes(x = cut(hrsPlayingGames, breaks = 3), y = faceRatioG)) + 
-    geom_boxplot()
+# Remove outliers (those who report more than 8 hours a day)
+rq4a.data %>% filter(hrsPlayingGames < 8*7 & hrsWatchingVGContent < 8*7) -> rq4a.data
 
-rq4a.data %>%
-  ggplot(aes(x = cut(hrsWatchingVGContent, breaks = 3), y = faceRatioG)) + 
-    geom_boxplot()
+# rq4a.data %>%
+#   ggplot(aes(x = cut(hrsPlayingGames, breaks = 3), y = faceRatioG)) + 
+#     geom_boxplot()
+# 
+# rq4a.data %>%
+#   ggplot(aes(x = cut(hrsWatchingVGContent, breaks = 3), y = faceRatioG)) + 
+#     geom_boxplot()
 
-rq4a.data %>%
-  ggplot(aes(x = hrsPlayingGames, y = faceRatioG)) +
-    geom_point() +
-    stat_smooth(method = "lm")
+# Plot the relationships and evaluate potential correlations
+play.plot <- rq4a.data %>%
+                ggplot(aes(x = hrsPlayingGames, y = faceRatioG)) +
+                geom_point() +
+                stat_smooth(method = "lm")
 
-rq4a.data %>%
-  ggplot(aes(x = hrsWatchingVGContent, y = faceRatioG)) +
-    geom_point() +
-    stat_smooth(method = "lm")
+watch.plot <- rq4a.data %>%
+                ggplot(aes(x = hrsWatchingVGContent, y = faceRatioG)) +
+                geom_point() +
+                stat_smooth(method = "lm")
 
-rq4a.model.1 <- lm(faceRatioG ~ hrsPlayingGames, data = rq4a.data)
-par(mfrow = c(2, 2))
-plot(rq4a.model.1)
-summary(rq4a.model.1)
+ggarrange(play.plot, watch.plot,
+         ncol = 2)
 
-rq4a.model.2 <- lm(faceRatioG ~ hrsWatchingVGContent, data = rq4a.data)
-par(mfrow = c(2, 2))
-plot(rq4a.model.2)
-summary(rq4a.model.2)
+cor.test(~ faceRatioG + hrsPlayingGames, rq4a.data)
+cor.test(~ faceRatioG + hrsWatchingVGContent, rq4a.data)
 
+# rq4a.model.1 <- lm(faceRatioG ~ hrsPlayingGames, data = rq4a.data)
+# par(mfrow = c(2, 2))
+# plot(rq4a.model.1)
+# summary(rq4a.model.1)
+# 
+# rq4a.model.2 <- lm(faceRatioG ~ hrsWatchingVGContent, data = rq4a.data)
+# par(mfrow = c(2, 2))
+# plot(rq4a.model.2)
+# summary(rq4a.model.2)
+```
+It does not appear that there is a clear linear correlation between allocation of attention (as measured by gaze ratio) and experience with either playing or watching video game content online. 
+
+As an alternative approach, there are enough participants who do not play or watch video game content *at all* that the variable can be binarized, which may yield different results.
+
+```{r rq4a.2}
 rq4a.data %>% mutate(player = hrsPlayingGames > 0,
                     watcher = hrsWatchingVGContent > 0) -> rq4a.data
 
-shapiro.test(rq4a.data$faceRatioG)
-rq4a.data %>% ggplot(aes(x = faceRatioG)) +
-  geom_histogram(binwidth = 0.025, aes(y = ..density.., fill = ..count..)) +
-  scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C") +
-  stat_function(fun=dnorm,
-                color="red",
-                args=list(mean=mean(rq4a.data$faceRatioG), 
-                          sd=sd(rq4a.data$faceRatioG)))
-# Note that gaze ratio is not (quite) normally distributed
 
-bartlett.test(faceRatioG ~ player, rq4a.data)
-bartlett.test(faceRatioG ~ watcher, rq4a.data)
-# And variances are not equal
+# Visualize the difference between groups using a boxplot
+play.plot <- ggboxplot(rq4a.data, x = "player", y = "faceRatioG",
+                xlab = "Game Player", ylab = "Gaze Ratio",
+                color = "player", legend = "none")
 
-wilcox.test(faceRatioG ~ player, rq4a.data, alternative = "two.sided", correct = F)
-wilcox.test(faceRatioG ~ watcher, rq4a.data, alternative = "two.sided", correct = F)
+watch.plot <- ggboxplot(rq4a.data, x = "watcher", y = "faceRatioG",
+                xlab = "Game Content Watcher", ylab = "Gaze Ratio",
+                color = "watcher", legend = "none")
+
+ggarrange(play.plot, watch.plot,
+          ncol = 2)
+
+# There are outliers visible in the gaze boxplot, so remove them
+rq4a.data.outliers <- boxplot(faceRatioG ~ player, data = rq4a.data, plot=F)$out
+rq4a.data.outliers <- c(rq4a.data.outliers, 
+                                boxplot(faceRatioG ~ watcher, data = rq4a.data, plot=F)$out)
+
+
+rq4a.data.inrange <- rq4a.data[-which(rq4a.data$faceRatioG %in% rq4a.data.outliers),]
+
+# Replot 
+# Visualize the difference between groups using a boxplot
+play.plot <- ggboxplot(rq4a.data.inrange, x = "player", y = "faceRatioG",
+                xlab = "Game Player", ylab = "Gaze Ratio",
+                color = "player", legend = "none")
+
+watch.plot <- ggboxplot(rq4a.data.inrange, x = "watcher", y = "faceRatioG",
+                xlab = "Game Content Watcher", ylab = "Gaze Ratio",
+                color = "watcher", legend = "none")
+
+ggarrange(play.plot, watch.plot,
+          ncol = 2)
+
+# Check for normality in the reduced dataset
+shapiro.test(rq4a.data.inrange$faceRatioG)
+ggqqplot(rq4a.data.inrange$faceRatioG)
+# rq4a.data %>% ggplot(aes(x = faceRatioG)) +
+#   geom_histogram(binwidth = 0.025, aes(y = ..density.., fill = ..count..)) +
+#   scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C") +
+#   stat_function(fun=dnorm,
+#                 color="red",
+#                 args=list(mean=mean(rq4a.data$faceRatioG), 
+#                           sd=sd(rq4a.data$faceRatioG)))
+
+bartlett.test(faceRatioG ~ player, rq4a.data.inrange)
+bartlett.test(faceRatioG ~ watcher, rq4a.data.inrange)
+
+t.test(faceRatioG ~ player, rq4a.data.inrange,
+       alternative = "two.sided", var.equal=T)
+t.test(faceRatioG ~ watcher, rq4a.data.inrange,
+       alternative = "two.sided", var.equal=T)
+
+# wilcox.test(faceRatioG ~ player, rq4a.data, alternative = "two.sided", correct = F)
+# wilcox.test(faceRatioG ~ watcher, rq4a.data, alternative = "two.sided", correct = F)
 ```
 
 There is not a clear trend in terms of experienced players or watchers allocating their attention differentially to the facecam. However, that this analysis implicitly excludes those participants in the non-facecam condition. It might also be worth considering whether these factors affect overall attention allocation (i.e., whether people pay attention to the stimulus at all).
 
 ```{r rq4b}
-rq4b.data <- vgv %>%
+
+rq4b.data <- vgv %>% select(id, timeSpentG, timeSpentF, 
+                            hrsWatchingRecordedVGContent_weekday,
+                            hrsWatchingRecordedVGContent_weekend,
+                            hrsWatchingStreamedVGContent_weekday,
+                            hrsWatchingStreamedVGContent_weekend,
+                            hrsPlayingSinglePlayer_weekday,
+                            hrsPlayingSinglePlayer_weekend,
+                            hrsPlayingMultiPlayer_weekday,
+                            hrsPlayingMultiPlayer_weekend) %>% 
+  unique() %>%
+  replace_na(list(hrsWatchingRecordedVGContent_weekday = 0,  # Respondents who did not report watching or playing games count as 0 hours
+                  hrsWatchingRecordedVGContent_weekday = 0,
+                  hrsWatchingRecordedVGContent_weekend = 0,
+                  hrsWatchingStreamedVGContent_weekday = 0,
+                  hrsWatchingStreamedVGContent_weekend = 0,
+                  hrsPlayingSinglePlayer_weekday = 0,
+                  hrsPlayingSinglePlayer_weekend = 0,
+                  hrsPlayingMultiPlayer_weekday = 0,
+                  hrsPlayingMultiPlayer_weekend = 0)) %>%
   mutate(hrsWatchingVGContent = hrsWatchingRecordedVGContent_weekday * 5 + 
                                 hrsWatchingRecordedVGContent_weekend * 2 +
                                 hrsWatchingStreamedVGContent_weekday * 5 +
@@ -420,9 +517,13 @@ rq4b.data <- vgv %>%
             hrsWatchingVGContent = first(hrsWatchingVGContent),
             hrsPlayingGames = first(hrsPlayingGames))
 
-rq4b.data[is.na(rq4b.data$hrsPlayingGames),]$hrsPlayingGames <- 0
-rq4b.data[is.na(rq4b.data$hrsWatchingVGContent),]$hrsWatchingVGContent <- 0
+# rq4b.data[is.na(rq4b.data$hrsPlayingGames),]$hrsPlayingGames <- 0
+# rq4b.data[is.na(rq4b.data$hrsWatchingVGContent),]$hrsWatchingVGContent <- 0
 
+# Remove outliers (those who report more than 8 hours a day)
+rq4b.data %>% filter(hrsPlayingGames < 8*7 & hrsWatchingVGContent < 8*7) -> rq4b.data
+
+# Visualize the distribution of total attention allocation
 rq4b.data %>% ggplot(aes(x = totalG)) +
   geom_histogram(binwidth = 100000, aes(y = ..density.., fill = ..count..)) +
   scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C") +
@@ -431,13 +532,10 @@ rq4b.data %>% ggplot(aes(x = totalG)) +
                 args=list(mean=mean(rq4b.data$totalG), 
                           sd=sd(rq4b.data$totalG)))
 
-rq4b.data <- rq4b.data %>% 
-  mutate(logG = log(totalG),
-         logF = log(totalF))
+# With the strong right skew and, it makes sense to log-transform the gaze measurement
+rq4b.data <- rq4b.data %>% mutate(logG = log(totalG))
 
-# Remove outliers (those who report more than 12 hours a day)
-rq4b.data %>% filter(hrsPlayingGames < 12*7 & hrsWatchingVGContent < 12*7) -> rq4b.data
-
+# Replot the log-transformed gaze measurement
 rq4b.data %>% ggplot(aes(x = logG)) +
   geom_histogram(binwidth = 0.25, aes(y = ..density.., fill = ..count..)) +
   scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C") +
@@ -446,40 +544,112 @@ rq4b.data %>% ggplot(aes(x = logG)) +
                 args=list(mean=mean(rq4b.data$logG), 
                           sd=sd(rq4b.data$logG)))
 
-rq4b.data %>% ggplot(aes(x = logF)) +
-  geom_histogram(binwidth = 0.25, aes(y = ..density.., fill = ..count..)) +
-  scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C") +
-  stat_function(fun=dnorm,
-                color="red",
-                args=list(mean=mean(rq4b.data$logF), 
-                          sd=sd(rq4b.data$logF)))
-
 # Remove visual outlier [id = 3694]
-rq4b.data <- rq4b.data %>% filter(id != 3694)
+# rq4b.data <- rq4b.data %>% filter(id != 3694)
 
-rq4b.data %>%
+play.plot <- rq4b.data %>%
   ggplot(aes(x = hrsPlayingGames, y = logG)) +
     geom_point() +
     stat_smooth(method = "lm")
 
-rq4b.data %>%
+watch.plot <- rq4b.data %>%
   ggplot(aes(x = hrsWatchingVGContent, y = logG)) +
     geom_point() +
     stat_smooth(method = "lm")
 
-rq4b.model <- lm(logG ~ hrsPlayingGames, data = rq4b.data)
-par(mfrow = c(2, 2))
-plot(rq4b.model)
-summary(rq4b.model)
+ggarrange(play.plot, watch.plot,
+          ncol = 2)
+
+# It looks like there are some pretty significant (and potentially influential outliers)
+lm(logG ~ hrsPlayingGames, rq4b.data) %>%
+  augment() %>% 
+  select(-.hat, -.sigma, -.fitted, -.se.fit) %>%
+  filter(abs(.std.resid) > 3) %>% as.data.frame() %>%
+  rename(response = hrsPlayingGames) -> rq4b.model.outliers
+
+lm(logG ~ hrsWatchingVGContent, rq4b.data) %>%
+  augment() %>%
+  select(-.hat, -.sigma, -.fitted, -.se.fit) %>%
+  filter(abs(.std.resid) > 3) %>% as.data.frame() %>%
+  rename(response =  hrsWatchingVGContent) %>%
+  full_join(rq4b.model.outliers) -> rq4b.model.outliers
+
+rq4b.data.inrange <- rq4b.data %>%
+  filter(!(logG %in% rq4b.model.outliers$logG & 
+             (hrsPlayingGames %in% rq4b.model.outliers$response |
+                hrsWatchingVGContent %in% rq4b.model.outliers$response)))
+
+# Replot and check for potential correlations
+play.plot <- rq4b.data.inrange %>%
+  ggplot(aes(x = hrsPlayingGames, y = logG)) +
+    geom_point() +
+    stat_smooth(method = "lm")
+
+watch.plot <- rq4b.data.inrange %>%
+  ggplot(aes(x = hrsWatchingVGContent, y = logG)) +
+    geom_point() +
+    stat_smooth(method = "lm")
+
+ggarrange(play.plot, watch.plot,
+          ncol = 2)
+
+cor.test(~ logG + hrsPlayingGames, rq4b.data.inrange)
+cor.test(~ logG + hrsWatchingVGContent, rq4b.data.inrange)
+
+# rq4b.model <- lm(logG ~ hrsPlayingGames, data = rq4b.data)
+# par(mfrow = c(2, 2))
+# plot(rq4b.model)
+# summary(rq4b.model)
 
 rq4b.data %>% mutate(player = hrsPlayingGames > 0,
                     watcher = hrsWatchingVGContent > 0) -> rq4b.data
 
-bartlett.test(logG ~ player, rq4b.data)
-bartlett.test(logG ~ watcher, rq4b.data)
+# Visualize the differences in overall attention allocation between players and watchers
+play.plot <- ggboxplot(rq4b.data, x = "player", y = "logG",
+                xlab = "Game Player", ylab = "Gaze Allocation [Log]",
+                color = "player", legend = "none")
 
-wilcox.test(logG ~ player, rq4b.data, alternative = "two.sided", correct = F)
-wilcox.test(logG ~ watcher, rq4b.data, alternative = "two.sided", correct = F)
+watch.plot <- ggboxplot(rq4b.data, x = "watcher", y = "logG",
+                xlab = "Game Content Watcher", ylab = "Gaze Allocation [Log]",
+                color = "watcher", legend = "none")
+
+ggarrange(play.plot, watch.plot,
+          ncol = 2)
+
+# There are outliers visible in the gaze boxplot, so remove them
+rq4b.data.outliers <- boxplot(logG ~ player, data = rq4b.data, plot=F)$out
+rq4b.data.outliers <- c(rq4a.data.outliers, 
+                                boxplot(logG ~ watcher, data = rq4b.data, plot=F)$out)
+
+
+rq4b.data.inrange <- rq4b.data[-which(rq4b.data$logG %in% rq4b.data.outliers),]
+
+#  Replot with the reduced data set
+
+# Visualize the differences in overall attention allocation between players and watchers
+play.plot <- ggboxplot(rq4b.data.inrange, x = "player", y = "logG",
+                xlab = "Game Player", ylab = "Gaze Allocation [Log]",
+                color = "player", legend = "none")
+
+watch.plot <- ggboxplot(rq4b.data.inrange, x = "watcher", y = "logG",
+                xlab = "Game Content Watcher", ylab = "Gaze Allocation [Log]",
+                color = "watcher", legend = "none")
+
+ggarrange(play.plot, watch.plot,
+          ncol = 2)
+
+# Check for normality in the reduced dataset
+shapiro.test(rq4b.data.inrange$logG)
+ggqqplot(rq4b.data.inrange$logG)
+
+# The distributions are still not quite normal, so we will use a non-parametric
+# Mann-Whitney test
+
+bartlett.test(logG ~ player, rq4b.data.inrange)
+bartlett.test(logG ~ watcher, rq4b.data.inrange)
+
+wilcox.test(logG ~ player, rq4b.data.inrange, alternative = "two.sided", correct = F)
+wilcox.test(logG ~ watcher, rq4b.data.inrange, alternative = "two.sided", correct = F)
 ```
 
-It doesn't seem that experienced players of video games or watchers of streamed video game content allocate their overall attention significantly differently.
+While experienced players and watchers did pay more overall attention to the stimulus, the difference was marginal and not statistically significant.
