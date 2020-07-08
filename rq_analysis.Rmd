@@ -224,21 +224,35 @@ ggboxplot(rq3a.data, x = "orientationMatch", y = "faceRatioG",
           xlab = "Orientation Match", ylab = "Gaze Ratio",
           color = "orientationMatch", legend = "none")
 
+# # Visualize the difference between groups using a boxplot
+# ggboxplot(rq3a.data, x = "orientationMatch", y = "faceRatioF",
+#           xlab = "Orientation Match", ylab = "Fixation Ratio",
+#           color = "orientationMatch", legend = "none")
+
+# There are outliers visible in the gaze boxplot, so remove them
+rq3a.data.outliers <- boxplot(faceRatioG ~ orientationMatch, data = rq3a.data, plot=F)$out
+rq3a.data.inrange <- rq3a.data[-which(rq3a.data$faceRatioG %in% rq3a.data.outliers),]
+
+# Replot
 # Visualize the difference between groups using a boxplot
-ggboxplot(rq3a.data, x = "orientationMatch", y = "faceRatioF",
-          xlab = "Orientation Match", ylab = "Fixation Ratio",
+ggboxplot(rq3a.data.inrange, x = "orientationMatch", y = "faceRatioG",
+          xlab = "Orientation Match", ylab = "Gaze Ratio",
           color = "orientationMatch", legend = "none")
 
+# Check for near-normality of distributions in the reduced dataset
+ggqqplot(rq3a.data.inrange$faceRatioG)
+shapiro.test(rq3a.data.inrange$faceRatioG)
+
 # Now test for homogeneity of variance
-bartlett.test(faceRatioG ~ orientationMatch, rq3a.data)
-bartlett.test(faceRatioF ~ orientationMatch, rq3a.data)
+bartlett.test(faceRatioG ~ orientationMatch, rq3a.data.inrange)
+# bartlett.test(faceRatioF ~ orientationMatch, rq3a.data)
 
 # Run some t-tests
-t.test(faceRatioG ~ orientationMatch, data = rq3a.data,
+t.test(faceRatioG ~ orientationMatch, data = rq3a.data.inrange,
        var.equal = TRUE, alternative = "two.sided")
 
-t.test(faceRatioF ~ orientationMatch, data = rq3a.data,
-       var.equal = TRUE, alternative = "two.sided")
+# t.test(faceRatioF ~ orientationMatch, data = rq3a.data,
+#       var.equal = TRUE, alternative = "two.sided")
 ```
 It appears that there may be a slightly higher allocation of attention to the facecam among participants whose orientation matched the gender of the streamer, but the difference was marginal and did not approach statistical significance.
 
@@ -270,23 +284,37 @@ ggboxplot(rq3b.data, x = "identityMatch", y = "faceRatioG",
           color = "identityMatch", legend = "none")
 
 # Visualize the difference between groups using a boxplot
-ggboxplot(rq3b.data, x = "identityMatch", y = "faceRatioF",
-          xlab = "Homophily", ylab = "Fixation Ratio",
+# ggboxplot(rq3b.data, x = "identityMatch", y = "faceRatioF",
+#           xlab = "Homophily", ylab = "Fixation Ratio",
+#           color = "identityMatch", legend = "none")
+
+# There are outliers visible in the gaze boxplot, so remove them
+rq3b.data.outliers <- boxplot(faceRatioG ~ identityMatch, data = rq3b.data, plot=F)$out
+rq3b.data.inrange <- rq3b.data[-which(rq3b.data$faceRatioG %in% rq3b.data.outliers),]
+
+# Replot
+# Visualize the difference between groups using a boxplot
+ggboxplot(rq3b.data.inrange, x = "identityMatch", y = "faceRatioG",
+          xlab = "Homophily Match", ylab = "Gaze Ratio",
           color = "identityMatch", legend = "none")
 
+# Check for near-normality of distributions in the reduced dataset
+ggqqplot(rq3b.data.inrange$faceRatioG)
+shapiro.test(rq3b.data.inrange$faceRatioG)
+
 # Now test for homogeneity of variance
-bartlett.test(faceRatioG ~ identityMatch, rq3b.data)
-bartlett.test(faceRatioF ~ identityMatch, rq3b.data)
+bartlett.test(faceRatioG ~ identityMatch, rq3b.data.inrange)
+# bartlett.test(faceRatioF ~ identityMatch, rq3b.data)
 
 # Run some t-tests
-t.test(faceRatioG ~ identityMatch, data = rq3b.data,
+t.test(faceRatioG ~ identityMatch, data = rq3b.data.inrange,
        var.equal = TRUE, alternative = "two.sided")
 
-t.test(faceRatioF ~ identityMatch, data = rq3b.data,
-       var.equal = TRUE, alternative = "two.sided")
+# t.test(faceRatioF ~ identityMatch, data = rq3b.data,
+#        var.equal = TRUE, alternative = "two.sided")
 ```
 
-From these results, it appears that there is no significant difference in the outcome of interest based on homophily.
+As above, it appears that the difference in attention allocation based on homophily is marginal, and not statistically significant.
 
 ## RQ4: Experience -> Attention
 RQ4 is: *Do viewers with high levels of experience playing video games allocate their attention differently than inexperienced players when watching a livestream?*
